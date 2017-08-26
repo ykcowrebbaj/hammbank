@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+               "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>centos中的umask</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<meta name="title" content="centos中的umask"/>
+<meta name="generator" content="Org-mode"/>
+<meta name="generated" content="2017-08-26T21:43+0800"/>
+<meta name="author" content="朱捷文"/>
+<meta name="description" content=""/>
+<meta name="keywords" content=""/>
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  html { font-family: Times, serif; font-size: 12pt; }
+  .title  { text-align: center; }
+  .todo   { color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #add8e6; font-weight:normal }
+  .target { }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  {margin-left:auto; margin-right:0px;  text-align:right;}
+  .left   {margin-left:0px;  margin-right:auto; text-align:left;}
+  .center {margin-left:auto; margin-right:auto; text-align:center;}
+  p.verse { margin-left: 3% }
+  pre {
+	border: 1pt solid #AEBDCC;
+	background-color: #F3F5F7;
+	padding: 5pt;
+	font-family: courier, monospace;
+        font-size: 90%;
+        overflow:auto;
+  }
+  table { border-collapse: collapse; }
+  td, th { vertical-align: top;  }
+  th.right  { text-align:center;  }
+  th.left   { text-align:center;   }
+  th.center { text-align:center; }
+  td.right  { text-align:right;  }
+  td.left   { text-align:left;   }
+  td.center { text-align:center; }
+  dt { font-weight: bold; }
+  div.figure { padding: 0.5em; }
+  div.figure p { text-align: center; }
+  div.inlinetask {
+    padding:10px;
+    border:2px solid gray;
+    margin:10px;
+    background: #ffffcc;
+  }
+  textarea { overflow-x: auto; }
+  .linenr { font-size:smaller }
+  .code-highlighted {background-color:#ffff00;}
+  .org-info-js_info-navigation { border-style:none; }
+  #org-info-js_console-label { font-size:10px; font-weight:bold;
+                               white-space:nowrap; }
+  .org-info-js_search-highlight {background-color:#ffff00; color:#000000;
+                                 font-weight:bold; }
+  /*]]>*/-->
+</style><link rel="stylesheet" type="text/css" href="css/worg.css"/>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+
+</head>
+<body>
+
+<div id="preamble">
+
+</div>
+
+<div id="content">
+<h1 class="title">centos中的umask</h1>
+
+<p>在使用gitolite对git做权限管理的过程中，需要使用到配置文件.gitolite.rc中的umask，来控制git checkout出来的文件的使用权限。但是令人困惑的是在.gitolite.rc中的umask设为0000的情况下（其中，0000的左边第一个0不在本文的讨论范围内。），每次push后通过post-receive自动checkout到工作区的文件权限都是600，而不是期望中的666。后来仔细查看了sudoers的man page和.gitolite的源码，找到了问题的关键在于在hooks/post-receive中使用了sudo git checkout -f命令，而sudo对文件权限的设置有自己的一套规则，另外.gitolite.rc中的umask设置也存在一些特殊情况，结合在一起，就会得到600这个看似有点奇怪的结果，下面就来详细的说明一下：
+</p>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">umask的运算逻辑</a></li>
+<li><a href="#sec-2">一个简单的umask例子</a></li>
+<li><a href="#sec-3">配置文件/etc/profile中的umask参数</a></li>
+<li><a href="#sec-4">配置文件/etc/login.defs中的umask参数</a></li>
+<li><a href="#sec-5">/etc/sudoers配置文件中的umask参数与umask_override参数</a>
+<ul>
+<li><a href="#sec-5-1">/etc/sudoers中的umask参数</a></li>
+<li><a href="#sec-5-2">/etc/sudoers中umask参数的额外规则</a></li>
+<li><a href="#sec-5-3">/etc/sudoers中的umask_override参数</a></li>
+<li><a href="#sec-5-4">umask_override参数中的特殊情况</a></li>
+</ul>
+</li>
+<li><a href="#sec-6">gitolite.rc中的umask参数</a></li>
+<li><a href="#sec-7">参考</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-1" class="outline-2">
+<h2 id="sec-1">umask的运算逻辑</h2>
+<div class="outline-text-2" id="text-1">
+
+<p>在unxi系统中，创建一个新的普通文件，其权限是通过下面的逻辑运算确定的：
+</p>
+<p>
+<b>666&amp;(~umask)</b>
+</p>
+<p>
+其中"~"表示按位非，"&amp;"表示按位与，"~"的运算优先级要高于"&amp;"，所以括号也是可以省去的。上面的666为8进制数，对应的二进制为110110110，表示文件的权限为 <code>rw-rw-rw-</code> 。这也就是平时我们创建脚本文件后，执行前需要另外chmod +x filename加上执行权限的的原因。
+</p>
+<p>
+另外，上述逻辑运算公式666&amp;~umask中的umask也是可以设置的：
+</p>
+
+
+<pre class="src src-sh"><span style="color: #483d8b;">umask</span> 022
+</pre>
+
+<p>
+上述命令把umask给设置为了022，如需要显示当前的umask值，则使用下面命令：
+</p>
+
+
+<pre class="src src-sh"><span style="color: #483d8b;">umask</span>
+</pre>
+
+<p>
+输出：
+</p>
+
+
+<pre class="example">0022
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2">一个简单的umask例子</h2>
+<div class="outline-text-2" id="text-2">
+
+<p>下面我们来看一个具体的例子，输入：
+</p>
+
+
+<pre class="src src-sh"><span style="color: #483d8b;">umask</span>
+</pre>
+
+<p>
+输出：
+</p>
+
+
+<pre class="example">0022
+</pre>
+
+<p>
+输入：
+</p>
+
+
+<pre class="src src-sh">touch myfile
+ls -l myfile
+</pre>
+
+<p>
+输出：
+</p>
+
+
+<pre class="example">-rw-r--r--. 1 root root 0 Jan 20 09:02 myfile
+</pre>
+
+<p>
+第一个"-"表示普通文件， <code>rw-r--r--</code> 则表示权限644，我们可以用刚才的权限运算公式人工验证一下：
+</p>
+
+
+<pre class="example">666 &amp; ~022  ==&gt;  110110110 &amp; ~000010010  ==&gt;  110110110 &amp; 111101101 ==&gt;
+
+  110110110
+&amp; 111101101
+------------------
+  110100100 --&gt; 644
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">配置文件/etc/profile中的umask参数</h2>
+<div class="outline-text-2" id="text-3">
+
+<p>输入：
+</p>
+
+
+<pre class="src src-sh">cat /etc/profile
+</pre>
+
+<p>
+输出：
+</p>
+
+
+<pre class="example">...
+
+if [ $UID -gt 199 ] &amp;&amp; [ "`id -gn`" = "`id -un`" ]; then
+    umask 002
+else
+    umask 022
+fi
+
+...
+</pre>
+
+
+<p>
+这也就是说uid大于199且uid名与gid名相同时，登陆shell后，umask会被设为002，一般通过useradd创建的普通用户都属于这种情况。而root用户的uid为0，小于199，所以登陆shell之后，umask就会被设为022。
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4">配置文件/etc/login.defs中的umask参数</h2>
+<div class="outline-text-2" id="text-4">
+
+<p>输入：
+</p>
+
+
+<pre class="src src-sh">cat /etc/login.defs
+</pre>
+
+<p>
+输出：
+</p>
+
+
+<pre class="example">...
+
+# The permission mask is initialized to this value. If not specified, 
+# the permission mask will be initialized to 022.
+UMASK           077
+
+...
+</pre>
+
+<p>
+主要是用于设定useradd创建的用户家目录的权限，目录权限运算公式为 <b>777&amp;~umask</b> ，因此我们使用useradd创建的普通用户的家目录，其权限一般为 <code>drwx------</code> ，其中d代表文件类型为目录。例如：
+输入：
+</p>
+
+
+<pre class="src src-sh">useradd alice
+ls -ld /home/alice/
+</pre>
+
+<p>
+输出：
+</p>
+
+
+<pre class="example">drwx------. 3 alice alice 4096 Jan 21 10:35 /home/alice/
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-5" class="outline-2">
+<h2 id="sec-5">/etc/sudoers配置文件中的umask参数与umask_override参数</h2>
+<div class="outline-text-2" id="text-5">
+
+<p>sudoers配置文件中有两个与umask有关的参数：
+</p><ul>
+<li><b>umask</b>
+</li>
+<li><b>umask_override</b>
+</li>
+</ul>
+
+
+
+</div>
+
+<div id="outline-container-5-1" class="outline-3">
+<h3 id="sec-5-1">/etc/sudoers中的umask参数</h3>
+<div class="outline-text-3" id="text-5-1">
+
+<p>用户在通过sudo创建文件时，一般是通过下面的逻辑运算公式来设置普通文件权限的：
+</p>
+<p>
+<b>666&amp;~(sudoumask|umask)</b>
+</p>
+<p>
+其中"|"表示按位或，sudoumask表示/etc/sudoers配置文件中设置的umask的值，我们看一个例子，输入：
+</p>
+
+
+<pre class="example">visudo
+</pre>
+
+<p>
+在/etc/sudoers配置文件中添加下面两行：
+</p>
+
+
+<pre class="example">alice     localhost=NOPASSWD:     ALL
+Defaults umask = 0044
+</pre>
+
+<p>
+输入：
+</p>
+
+
+<pre class="src src-sh">su - alice
+<span style="color: #483d8b;">umask</span>
+</pre>
+
+<p>
+输出：
+</p>
+
+
+<pre class="example">0002
+</pre>
+
+<p>
+输入：
+</p>
+
+
+<pre class="src src-sh">sudo touch myfile1
+ls -l myfile1
+</pre>
+
+<p>
+输出：
+</p>
+
+
+<pre class="example">-rw--w----. 1 root root 0 Jan 21 11:02 myfile1
+</pre>
+
+<p>
+根据666&amp;~(044|002)，得到的最终权限为620。
+</p></div>
+
+</div>
+
+<div id="outline-container-5-2" class="outline-3">
+<h3 id="sec-5-2">/etc/sudoers中umask参数的额外规则</h3>
+<div class="outline-text-3" id="text-5-2">
+
+<p>此外，sudoers的umask，还有2条额外的规则：
+</p><ul>
+<li>当umask没有出现在sudoers配置文件中时，使用默认的0022作为sudo的umask，即运用 <b>666&amp;~(022|umask)</b> 规则来设置创建文件的权限。
+</li>
+<li>当Defaults umask = 0777或Defaults !umask时，运用 <b>666&amp;~umask</b> 规则。
+</li>
+</ul>
+
+
+<p>
+下面是一个运用上面第二条规则的例子，首先用visudo修改sudoers中的umask：
+</p>
+
+
+<pre class="example">Defaults umask = 0777
+</pre>
+
+<p>
+输入：
+</p>
+
+
+<pre class="src src-sh">sudo touch myfile2
+ls -l myfile2
+</pre>
+
+<p>
+输出：
+</p>
+
+
+<pre class="example">-rw-rw-r--. 1 root root 0 Jan 21 11:05 myfile2
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-5-3" class="outline-3">
+<h3 id="sec-5-3">/etc/sudoers中的umask_override参数</h3>
+<div class="outline-text-3" id="text-5-3">
+
+<p>再说一下umask_override，默认sudoers中不设置umask_override的。而如果我们在sudoers中增加了一条Defaults umask_override，则文件权限的运算规则则会变为 <b>666&amp;~sudoumask</b> 。比如：sudoers中并未设置Defaults mask = &hellip;，但设有Defaults umask_override，则根据之前所述规则，我认为sudoumask为默认的0022，于是新建文件的权限应为666&amp;~022，我们可以自己验证，此处就不多演示。但sudoers中设有Defaults umask_override时，却存在一种特殊情况，下面就进行说明。
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-5-4" class="outline-3">
+<h3 id="sec-5-4">umask_override参数中的特殊情况</h3>
+<div class="outline-text-3" id="text-5-4">
+
+<p>sudoers配置文件中既设有Defaults umask_override，又设有Defaults umask = 0777或Defaults !umask时，我们运用的是 <b>666&amp;~umask</b> 规则。同样可以自己验证，此处不再演示。
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-6" class="outline-2">
+<h2 id="sec-6">gitolite.rc中的umask参数</h2>
+<div class="outline-text-2" id="text-6">
+
+<p>下面我们就来说一下post-receive中加了sudo git checkout -f后，git push出来的文件最终会拥有600权限的原因。默认sudoers配置文件中是没有umask和umask_override设置的。所以通过sudo创建文件时，应用的是666&amp;~(sudoumask|umask)规则，且其中的sudoumask使用sudo默认的0022。同时git版本库又是以git这个普通用户创建的，uid大于199，于是默认的登陆umask取值为002，而.gitolite.rc中设为0000的umask用于覆盖git的002这个默认登陆umask。因此，666&amp;~(022|000)，得出644。等一下，之前不是说git push出来文件都是600吗？是的，确实不是刚才算出的644。原因在于gitolite是一款权限管理工具，对权限有很严格的限制，如果.gitolite.rc中设置的umask为0000，那么就相当于0077，所以666&amp;~(022|077)，最终得到600。这一点可以通过github上的源码清楚看到<a href="https://github.com/sitaramc/gitolite/blob/master/src/lib/Gitolite/Rc.pm">https://github.com/sitaramc/gitolite/blob/master/src/lib/Gitolite/Rc.pm</a><br/>
+</p>
+
+
+<pre class="src src-perl">...
+umask ( $<span style="color: #a0522d;">rc</span>{UMASK} || 0077 );
+...
+</pre>
+
+<p>
+这行代码表明.gitolite.rc中的umask不论被设为0还是不设置，都会被转换为0077。也就是说.gitolite.rc中的umask为0002时，文件拥有最大的权限。
+</p>
+<p>
+最后需要补充一点，通过sudo创建的文件，其uid或gid名字都是sudoers中配置的，比如最常用的root。sudo git checkout -f所创建文件的uid和gid名便也是sudoers中设定的root。并且git checkout -f涉及到重建缓存区，因此git版本库中的index文件的uid和gid名同样也会被改成root，而不能保持创建该版本库时的用户名。所以不建议在post-receive中加 <code>sudo git checkout -f</code> ，如要使得checkout出来的文件所有者和所有组为root，可以把 <code>sudo git checkout -f</code> 替换为：
+</p>
+
+
+<pre class="src src-sh">sudo chown git:git -R /my/dir/
+git --work-tree=/my/dir/ checkout -f
+sudo chown root:root -R /my/dir/
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-7" class="outline-2">
+<h2 id="sec-7">参考</h2>
+<div class="outline-text-2" id="text-7">
+
+<p><a href="https://wiki.archlinux.org/index.php/Sudo">https://wiki.archlinux.org/index.php/Sudo</a><br/>
+<a href="http://www.sudo.ws/man/sudoers.man.html">http://www.sudo.ws/man/sudoers.man.html</a><br/>
+<a href="http://gitolite.com/gitolite/gitolite.html">http://gitolite.com/gitolite/gitolite.html</a>
+</p></div>
+</div>
+</div>
+
+</body>
+</html>

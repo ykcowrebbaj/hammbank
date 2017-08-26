@@ -1,0 +1,735 @@
+<?xml version="1.0" encoding="gbk"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+               "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>lvs+keepalive</title>
+<meta http-equiv="Content-Type" content="text/html;charset=gbk"/>
+<meta name="title" content="lvs+keepalive"/>
+<meta name="generator" content="Org-mode"/>
+<meta name="generated" content="2017-08-26T21:43+0800"/>
+<meta name="author" content=""/>
+<meta name="description" content=""/>
+<meta name="keywords" content=""/>
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  html { font-family: Times, serif; font-size: 12pt; }
+  .title  { text-align: center; }
+  .todo   { color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #add8e6; font-weight:normal }
+  .target { }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  {margin-left:auto; margin-right:0px;  text-align:right;}
+  .left   {margin-left:0px;  margin-right:auto; text-align:left;}
+  .center {margin-left:auto; margin-right:auto; text-align:center;}
+  p.verse { margin-left: 3% }
+  pre {
+	border: 1pt solid #AEBDCC;
+	background-color: #F3F5F7;
+	padding: 5pt;
+	font-family: courier, monospace;
+        font-size: 90%;
+        overflow:auto;
+  }
+  table { border-collapse: collapse; }
+  td, th { vertical-align: top;  }
+  th.right  { text-align:center;  }
+  th.left   { text-align:center;   }
+  th.center { text-align:center; }
+  td.right  { text-align:right;  }
+  td.left   { text-align:left;   }
+  td.center { text-align:center; }
+  dt { font-weight: bold; }
+  div.figure { padding: 0.5em; }
+  div.figure p { text-align: center; }
+  div.inlinetask {
+    padding:10px;
+    border:2px solid gray;
+    margin:10px;
+    background: #ffffcc;
+  }
+  textarea { overflow-x: auto; }
+  .linenr { font-size:smaller }
+  .code-highlighted {background-color:#ffff00;}
+  .org-info-js_info-navigation { border-style:none; }
+  #org-info-js_console-label { font-size:10px; font-weight:bold;
+                               white-space:nowrap; }
+  .org-info-js_search-highlight {background-color:#ffff00; color:#000000;
+                                 font-weight:bold; }
+  /*]]>*/-->
+</style><link rel="stylesheet" type="text/css" href="css/worg.css"/>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+
+</head>
+<body>
+
+<div id="preamble">
+
+</div>
+
+<div id="content">
+<h1 class="title">lvs+keepalive</h1>
+
+
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">vrrp协议介绍</a></li>
+<li><a href="#sec-2">lvs+keepalived实验环境</a></li>
+<li><a href="#sec-3">real servers的搭建</a></li>
+<li><a href="#sec-4">lvs directors的搭建</a>
+<ul>
+<li><a href="#sec-4-1">keepalived的安装</a></li>
+<li><a href="#sec-4-2">keepalived的配置</a></li>
+</ul>
+</li>
+<li><a href="#sec-5">keepalived的作用</a>
+<ul>
+<li><a href="#sec-5-1">keepalived的故障切换（failover）</a></li>
+<li><a href="#sec-5-2">keepalived的健康检查（healthcheck）</a></li>
+</ul>
+</li>
+<li><a href="#sec-6">其他（未完成）</a>
+<ul>
+<li><a href="#sec-6-1">关于vrrp协议中的定时器</a></li>
+</ul>
+</li>
+<li><a href="#sec-7">参考</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-1" class="outline-2">
+<h2 id="sec-1">vrrp协议介绍</h2>
+<div class="outline-text-2" id="text-1">
+
+<p>vrrp分组格式：
+</p>
+
+
+<pre class="example"> 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|Version| Type  | Virtual Rtr ID|   Priority    | Count IP Addrs|
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|   Auth Type   |   Adver Int   |          Checksum             |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                         IP Address (1)                        |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                            .                                  |
+|                            .                                  |
+|                            .                                  |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                         IP Address (n)                        |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                     Authentication Data (1)                   |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                     Authentication Data (2)                   |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</pre>
+
+<p>
+vrrp状态转换图：
+</p>
+
+
+<pre class="example">                   +---------------+
+        +---------&gt;|               |&lt;-------------+
+        |          |  Initialize   |              |
+        |   +------|               |----------+   |
+        |   |      +---------------+          |   |
+        |   |                                 |   |
+        |   V                                 V   |
++---------------+                       +---------------+
+|               |----------------------&gt;|               |
+|    Master     |                       |    Backup     |
+|               |&lt;----------------------|               |
++---------------+                       +---------------+
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2">lvs+keepalived实验环境</h2>
+<div class="outline-text-2" id="text-2">
+
+<p>我们的实验环境由4台服务器组成，2台负载均衡器/转发器（director），2台真实服务器（real server）：
+</p><table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<colgroup><col class="left" /></colgroup>
+<colgroup><col class="left" /></colgroup>
+<colgroup><col class="left" />
+</colgroup>
+<thead>
+<tr><th scope="col" class="left">角色</th><th scope="col" class="left">ip地址</th><th scope="col" class="left">操作</th></tr>
+</thead>
+<tbody>
+<tr><td class="left">director 1</td><td class="left">192.168.220.31</td><td class="left">ipvsadm +</td></tr>
+<tr><td class="left">(MASTER)</td><td class="left"></td><td class="left">keepalived</td></tr>
+</tbody>
+<tbody>
+<tr><td class="left">director 2</td><td class="left">192.168.220.32</td><td class="left">ipvsadm +</td></tr>
+<tr><td class="left">(BACKUP)</td><td class="left"></td><td class="left">keepalived</td></tr>
+</tbody>
+<tbody>
+<tr><td class="left">real server 1</td><td class="left">192.168.220.33</td><td class="left">nginx +</td></tr>
+<tr><td class="left"></td><td class="left"></td><td class="left">lvs_real脚本</td></tr>
+</tbody>
+<tbody>
+<tr><td class="left">real server 2</td><td class="left">192.168.220.34</td><td class="left">nginx +</td></tr>
+<tr><td class="left"></td><td class="left"></td><td class="left">lvs_real脚本</td></tr>
+</tbody>
+</table>
+
+
+
+<p>
+另外，192.168.220.30作为我们的虚拟ip（vip）地址
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">real servers的搭建</h2>
+<div class="outline-text-2" id="text-3">
+
+<p>real server（有些文档中也称为lvs客户端），指负载均衡器/转发器（director）后面提供服务的真实机器。负载均衡类型（lb_kind）一般分直接路由模式DR，网络地址转换模式NAT，以及隧道模式TUN三种。不管采取哪一种模式，real server上都不需安装额外的软件。real server的配置是根据其所采用的负载均衡种类(lb_kind)来做相应操作的。在我们的应用环境里，为了获得最高的性能，采用的负载均衡种类(lb_kind)是直接路由模式DR。
+</p>
+
+
+
+<pre class="src src-sh">vi /usr/local/bin/lvs_real
+</pre>
+
+
+
+<pre class="src src-sh"><span style="color: #b22222;">#</span><span style="color: #b22222;">!/bin/</span><span style="color: #a020f0;">bash</span>
+<span style="color: #b22222;">#</span><span style="color: #b22222;">description : start realserver</span>
+<span style="color: #a0522d;">VIP</span>=192.168.220.30
+/etc/rc.d/init.d/functions
+<span style="color: #a020f0;">case</span> <span style="color: #8b2252;">"$1"</span><span style="color: #a020f0;"> in</span>
+start)
+<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">" start LVS of REALServer"</span>
+/sbin/ifconfig lo:0 $<span style="color: #a0522d;">VIP</span> broadcast $<span style="color: #a0522d;">VIP</span> netmask 255.255.255.255 up
+<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">"1"</span> &gt;/proc/sys/net/ipv4/conf/lo/arp_ignore
+<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">"2"</span> &gt;/proc/sys/net/ipv4/conf/lo/arp_announce
+<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">"1"</span> &gt;/proc/sys/net/ipv4/conf/all/arp_ignore
+<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">"2"</span> &gt;/proc/sys/net/ipv4/conf/all/arp_announce
+;;
+stop)
+/sbin/ifconfig lo:0 down
+<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">"close LVS Directorserver"</span>
+<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">"0"</span> &gt;/proc/sys/net/ipv4/conf/lo/arp_ignore
+<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">"0"</span> &gt;/proc/sys/net/ipv4/conf/lo/arp_announce
+<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">"0"</span> &gt;/proc/sys/net/ipv4/conf/all/arp_ignore
+<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">"0"</span> &gt;/proc/sys/net/ipv4/conf/all/arp_announce
+;;
+*)
+<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">"Usage: $0 {start|stop}"</span>
+<span style="color: #a020f0;">exit</span> 1
+<span style="color: #a020f0;">esac</span>
+</pre>
+
+
+
+<pre class="src src-sh">chmod +x /usr/local/bin/lvs_real
+</pre>
+
+
+<p>
+启动和停止real server上的vip，可以通过脚本的start和stop这两个参数来控制。首先，我们来启动配置脚本：
+</p>
+
+
+<pre class="src src-sh">/usr/local/bin/lvs_real start
+</pre>
+
+
+<p>
+我们来验证一下real server配置是否正确：
+</p>
+
+
+
+<pre class="src src-sh">ip addr
+</pre>
+
+
+<pre>
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 16436 qdisc noqueue 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+    inet <font color="red">192.168.220.30/32</font> brd 192.168.220.30 scope global lo:0
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:0c:29:64:2f:a5 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.220.33/24 brd 192.168.220.255 scope global eth0
+    inet6 fe80::20c:29ff:fe64:2fa5/64 scope link 
+       valid_lft forever preferred_lft forever
+3: sit0: &lt;NOARP&gt; mtu 1480 qdisc noop 
+    link/sit 0.0.0.0 brd 0.0.0.0
+</pre>
+
+<p>
+从输出可以看出，lo0:0已绑定了我们指定的vip地址。
+</p>
+<p>
+而当我们需要卸载已绑定的vip时，执行下面命令：
+</p>
+
+
+<pre class="src src-sh">/usr/local/bin/lvs_real stop
+</pre>
+
+
+<p>
+两台realserver的lvs<sub>real脚本完全相同，所以另一台lvs</sub><sub>real脚本只需简单的复制黏贴过去就可以了，这里就不再重复。</sub>
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4">lvs directors的搭建</h2>
+<div class="outline-text-2" id="text-4">
+
+
+</div>
+
+<div id="outline-container-4-1" class="outline-3">
+<h3 id="sec-4-1">keepalived的安装</h3>
+<div class="outline-text-3" id="text-4-1">
+
+
+
+
+<pre class="src src-sh">yum install ipvsadm
+</pre>
+
+
+
+<pre class="src src-sh">curl -O http://www.keepalived.org/software/keepalived-1.2.19.tar.gz
+tar zxvf keepalived-1.2.19.tar.gz
+<span style="color: #483d8b;">cd</span> keepalived-1.2.19
+./configure --sysconf=/etc/
+</pre>
+
+
+<p>
+在./configure时加&ndash;sysconf=/etc/的好处是，安装完成后服务启动脚本会被复制到/etc/init.d/下，以后可以直接通过service命令来启动或停止，另外，配置文件keepalived.conf会被放在/etc/keepalived/下。
+</p>
+<p>
+如果是rhel5，可能会在./configure时报错： <code>configure: error: No SO_MARK declaration in headers</code> ，可以通过增加 <code>--disable-fwmark</code> 选项来解决：
+</p>
+
+
+<pre class="src src-sh">./configure --sysconf=/etc/ --disable-fwmark
+</pre>
+
+
+<p>
+如果configure 操作能正常进行，运行完毕后将有如下的汇总输出：
+</p>
+
+
+<pre class="example">Keepalived configuration
+------------------------
+Keepalived version       : 1.2.19
+Compiler                 : gcc
+Compiler flags           : -g -O2 -DETHERTYPE_IPV6=0x86dd
+Extra Lib                : -lssl -lcrypto -lcrypt 
+Use IPVS Framework       : Yes
+IPVS sync daemon support : Yes
+IPVS use libnl           : No
+fwmark socket support    : No
+Use VRRP Framework       : Yes
+Use VRRP VMAC            : No
+SNMP support             : No
+SHA1 support             : No
+Use Debug flags          : No
+</pre>
+
+
+<p>
+编译并安装：
+</p>
+
+
+<pre class="src src-sh">make
+make install
+ln -s /usr/local/sbin/keepalived /sbin/
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-4-2" class="outline-3">
+<h3 id="sec-4-2">keepalived的配置</h3>
+<div class="outline-text-3" id="text-4-2">
+
+
+<p>
+一个功能比较完整的keepalived 的配置文件，其配置文件keepalived.conf可以包含三个文本块：全局定义块、VRRP 实例定义块及虚拟服务器定义块。全局定义块和虚拟服务器定义块是必须的，如果在只有一个负载均衡器的场合，就不须VRRP实例定义块。
+</p>
+<p>
+下面是我们的director Master上的配置：
+</p>
+
+
+<pre class="src src-sh">vi /etc/keepalived/keepalived.conf
+</pre>
+
+
+
+<pre class="example">! Configuration File for keepalived
+
+global_defs {
+   router_id LVS_DEVEL_1
+}
+
+vrrp_instance VI_1 {
+    state MASTER #仅仅表示keepalived启动时本节点的初始化状态，一旦keepalived的其他节点启动后，将根据优先级进行选举，最终最高优先级的节点将获得master状态。所以此处的状态对于最终本节点能否成为master并不重要。
+    interface eth0 #发送vrrp多播心跳包的接口地址
+    virtual_router_id 51 #vrrp分组中的Virtual Rtr ID字段，范围为1-255，同一个vrrp_instance中MASTER和BACKUPs的virtual_router_id是相同的
+    priority 100 #在RFC 3768默认值是100，设置范围为1~254，值0和255都是保留给系统使用的，不能手动设置。但在keepalived中priority默认值为1，而且经试验允许设置为255。另外man 5 keepalived.conf中建议为master节点设置的优先级要比其他节点的优先级大50以上，这里的试验环境没有照做貌似也没问题。(注:vrrp中优先级255是留给IP Address Owner的，在IP Address Owner在线时，不仅作为master转发数据包，还必须响应目标地址为该IP地址的所有请求。也就是说其他优先级1~254的节点，即使转为master状态，也不应该响应目标地址为该IP地址的ICMP，TCP，UDP等请求。keepalived没有提及IP Address Owner的概念，应该不需要为系统保留255。另外，还有一点区别也顺便说一下，在vrrp中提到的虚拟mac地址，keepalived文档中也没有说起)。
+    advert_int 1 #通告时间间隔，单位为秒，一般设为1，作为心跳包每隔1秒发送一次
+    authentication {
+        auth_type PASS #认证类型，主备必须一致
+        auth_pass 1111 #认证密码，主备必须一致
+    }
+    #nopreempt #为了避免生产环境中，主备的频繁切换，可以设置非抢占模式：即高priority的主机挂掉并切换为备机后，即便之后该高priority主机上线并恢复，也不会获得master状态。注意，nopreempt只有在state BACKUP配置中才有效，此配置文件的state为MASTER，要使其生效必须先改为BACKUP。
+    virtual_ipaddress {
+        192.168.220.30 #vrrp数据分组中的IP Address字段
+    }
+}
+
+virtual_server 192.168.220.30 80 {
+    delay_loop 6
+    lb_algo rr
+    lb_kind DR
+#    persistence_timeout 50
+    protocol TCP
+
+    real_server 192.168.220.33 80 {
+        weight 100
+        TCP_CHECK {
+                connect_timeout 3
+                nb_get_retry 3
+                delay_before_retry 3
+                connect_port 80
+        }
+    }
+    real_server 192.168.220.34 80 {
+        weight 100
+        TCP_CHECK {
+                connect_timeout 3
+                nb_get_retry 3
+                delay_before_retry 3
+                connect_port 80
+        }
+    }
+}
+
+</pre>
+
+<p>
+在我们这个实验环境里只有一个vrrp实例（vrrp_instance），所以主负载均衡器(MASTER)与备份负载均衡器（BACKUP）配置文件差异一共只有3处: 
+</p><ul>
+<li><code>route_id LVS_DEVEL_2</code> 
+</li>
+<li><code>state BACKUP</code> 
+</li>
+<li><code>priority 80</code>
+</li>
+</ul>
+
+<p>所以备份负载均很器的keepalived.conf配置不再另外贴出。
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-5" class="outline-2">
+<h2 id="sec-5">keepalived的作用</h2>
+<div class="outline-text-2" id="text-5">
+
+<p>我们知道lvs的作用只是负载均衡，自身不具备高可用性。lvs+keepalived目的就是为了让本身不具备高可用的lvs达到高可用。keepalived主要通过两方面来实现：
+</p><ul>
+<li>故障切换（failover）
+</li>
+<li>健康检查（healthcheck）
+</li>
+</ul>
+
+<p>下边就直接通过简单的例子分别来介绍。但在这之前先启动我们的高可用负载均衡集群（real servers上启动nginx和lvs<sub>real脚本，lvs</sub> directors上启动keepalived）。
+</p>
+
+</div>
+
+<div id="outline-container-5-1" class="outline-3">
+<h3 id="sec-5-1">keepalived的故障切换（failover）</h3>
+<div class="outline-text-3" id="text-5-1">
+
+<p>director 1（192.168.220.31）和director 2（192.168.220.32）正常工作时的状态：
+<pre>
+[root@<font color="red">31</font> ~]# ip addr
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 16436 qdisc noqueue 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:0c:29:78:af:bb brd ff:ff:ff:ff:ff:ff
+    inet 192.168.220.31/24 brd 192.168.220.255 scope global eth0
+    inet <font color="red">192.168.220.30/32</font> scope global eth0
+    inet6 fe80::20c:29ff:fe78:afbb/64 scope link 
+       valid_lft forever preferred_lft forever
+3: sit0: &lt;NOARP&gt; mtu 1480 qdisc noop 
+    link/sit 0.0.0.0 brd 0.0.0.0
+</pre>
+
+<pre>
+[root@<font color="red">32</font> ~]# ip addr
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 16436 qdisc noqueue 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:0c:29:75:ff:4e brd ff:ff:ff:ff:ff:ff
+    inet 192.168.220.32/24 brd 192.168.220.255 scope global eth0
+    inet6 fe80::20c:29ff:fe75:ff4e/64 scope link 
+       valid_lft forever preferred_lft forever
+3: sit0: &lt;NOARP&gt; mtu 1480 qdisc noop 
+    link/sit 0.0.0.0 brd 0.0.0.0
+</pre>
+
+我们通过关闭director 1（192.168.220.31）上的keepalived服务来模拟故障：
+</p>
+
+
+
+<pre class="example">service keepalived stop
+</pre>
+
+
+<pre>
+[root@<font color="red">31</font> ~]# ip addr
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 16436 qdisc noqueue 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:0c:29:78:af:bb brd ff:ff:ff:ff:ff:ff
+    inet 192.168.220.31/24 brd 192.168.220.255 scope global eth0
+    inet6 fe80::20c:29ff:fe78:afbb/64 scope link 
+       valid_lft forever preferred_lft forever
+3: sit0: &lt;NOARP&gt; mtu 1480 qdisc noop 
+    link/sit 0.0.0.0 brd 0.0.0.0
+</pre>
+
+<pre>
+[root@<font color="red">32</font> ~]# ip addr
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 16436 qdisc noqueue 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:0c:29:75:ff:4e brd ff:ff:ff:ff:ff:ff
+    inet 192.168.220.32/24 brd 192.168.220.255 scope global eth0
+    inet <font color="red">192.168.220.30/32</font> scope global eth0
+    inet6 fe80::20c:29ff:fe75:ff4e/64 scope link 
+       valid_lft forever preferred_lft forever
+3: sit0: &lt;NOARP&gt; mtu 1480 qdisc noop 
+    link/sit 0.0.0.0 brd 0.0.0.0
+</pre>
+
+<p>
+可以看到，当director 1（192.168.220.31）产生故障时，虚拟ip（192.168.220.30）被成功的切换到director 2（192.168.220.32）上了
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-5-2" class="outline-3">
+<h3 id="sec-5-2">keepalived的健康检查（healthcheck）</h3>
+<div class="outline-text-3" id="text-5-2">
+
+<p>我们接着刚才的例子，再在director 2（192.168.220.32）上执行:
+</p>
+
+
+<pre class="src src-sh">ipvsadm -ln
+</pre>
+
+<p>
+可以看到，如果2台real server的状态都正常，都应该出现在lvs的pool列表中：
+<pre>
+[root@32 ~]# ipvsadm -ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.220.30:80 rr
+  -> <font color="red">192.168.220.34:80</font>            Route   100    0          0         
+  -> <font color="red">192.168.220.33:80</font>            Route   100    0          0         
+</pre>
+
+现在，我们通过停止real server 1（192.168.220.33）的nginx服务来模拟故障
+</p>
+
+
+<pre class="src src-sh">/opt/nginx/sbin/nginx -s stop
+</pre>
+
+
+<pre>
+[root@32 ~]# ipvsadm -ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.220.30:80 rr
+  -> <font color="red">192.168.220.34:80</font>            Route   100    0          0     
+</pre>    
+
+<p>
+可以看到，当director 2（192.168.220.32）通过健康检查，发现real server 1（192.168.220.33）的80端口已经不通之后，就把192.168.220.33:80从lvs的pool中给删掉了，从而避免用户客户端去连接有问题的192.168.220.33:80，成功做到了故障隔离。
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-6" class="outline-2">
+<h2 id="sec-6">其他（未完成）</h2>
+<div class="outline-text-2" id="text-6">
+
+
+</div>
+
+<div id="outline-container-6-1" class="outline-3">
+<h3 id="sec-6-1">关于vrrp协议中的定时器</h3>
+<div class="outline-text-3" id="text-6-1">
+
+
+
+
+
+<pre class="src src-sh">tcpdump -i eth0 vrrp
+</pre>
+
+
+
+<pre class="src src-sh">iptables -A OUTPUT -p vrrp -d 224.0.0.18 -j DROP
+iptables -D OUTPUT -p vrrp -d 224.0.0.18 -j DROP
+</pre>
+
+
+
+<pre class="example">10:42:35.701470 IP 192.168.220.31 &gt; 224.0.0.18: VRRPv2, Advertisement, vrid 51, prio 100, authtype simple, intvl 1s, length 20
+10:42:36.702518 IP 192.168.220.31 &gt; 224.0.0.18: VRRPv2, Advertisement, vrid 51, prio 100, authtype simple, intvl 1s, length 20
+10:42:37.703054 IP 192.168.220.31 &gt; 224.0.0.18: VRRPv2, Advertisement, vrid 51, prio 100, authtype simple, intvl 1s, length 20
+10:42:41.391585 IP 192.168.220.32 &gt; 224.0.0.18: VRRPv2, Advertisement, vrid 51, prio 80, authtype simple, intvl 1s, length 20
+10:42:42.393955 IP 192.168.220.32 &gt; 224.0.0.18: VRRPv2, Advertisement, vrid 51, prio 80, authtype simple, intvl 1s, length 20
+10:42:43.395390 IP 192.168.220.32 &gt; 224.0.0.18: VRRPv2, Advertisement, vrid 51, prio 80, authtype simple, intvl 1s, length 20
+10:42:43.395839 IP 192.168.220.31 &gt; 224.0.0.18: VRRPv2, Advertisement, vrid 51, prio 100, authtype simple, intvl 1s, length 20
+10:42:43.395932 IP 192.168.220.32 &gt; 224.0.0.18: VRRPv2, Advertisement, vrid 51, prio 80, authtype simple, intvl 1s, length 20
+10:42:43.398426 IP 192.168.220.31 &gt; 224.0.0.18: VRRPv2, Advertisement, vrid 51, prio 100, authtype simple, intvl 1s, length 20
+10:42:44.400151 IP 192.168.220.31 &gt; 224.0.0.18: VRRPv2, Advertisement, vrid 51, prio 100, authtype simple, intvl 1s, length 20
+10:42:45.400864 IP 192.168.220.31 &gt; 224.0.0.18: VRRPv2, Advertisement, vrid 51, prio 100, authtype simple, intvl 1s, length 20
+</pre>
+
+
+
+<pre class="example">41.391585 - 37.703054 = 3.688531
+
+Skew_Time:
+( (256 - Priority) / 256 )
+
+Master_Down_Interval:
+(3 * Advertisement_Interval) + Skew_time
+
+3 * 1 + (256 - 80) / 256 = 3.6875
+</pre>
+
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-7" class="outline-2">
+<h2 id="sec-7">参考</h2>
+<div class="outline-text-2" id="text-7">
+
+<ul>
+<li><a href="http://www.keepalived.org/pdf/sery-lvs-cluster.pdf">http://www.keepalived.org/pdf/sery-lvs-cluster.pdf</a>
+</li>
+<li><a href="http://tools.ietf.org/html/rfc3768">http://tools.ietf.org/html/rfc3768</a>
+</li>
+<li><a href="http://tools.ietf.org/html/rfc5798">http://tools.ietf.org/html/rfc5798</a>
+</li>
+</ul>
+
+</div>
+</div>
+</div>
+
+</body>
+</html>
