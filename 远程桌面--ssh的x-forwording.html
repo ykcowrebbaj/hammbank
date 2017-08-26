@@ -1,14 +1,14 @@
-<?xml version="1.0" encoding="gbk"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
                "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<title>Զ�����桪��ssh��Xת��</title>
-<meta http-equiv="Content-Type" content="text/html;charset=gbk"/>
-<meta name="title" content="Զ�����桪��ssh��Xת��"/>
+<title>远程桌面——ssh的X转发</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<meta name="title" content="远程桌面——ssh的X转发"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2017-08-26T21:43+0800"/>
-<meta name="author" content="�����"/>
+<meta name="generated" content="2017-08-27T02:08+0800"/>
+<meta name="author" content="朱捷文"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
 <style type="text/css">
@@ -115,32 +115,32 @@ for the JavaScript code in this tag.
 </div>
 
 <div id="content">
-<h1 class="title">Զ�����桪��ssh��Xת��</h1>
+<h1 class="title">远程桌面——ssh的X转发</h1>
 
-<p>�ڿ�ʼ֮ǰ��Ϊ�˱�����ң�������ͳһһ�����ƣ�
+<p>在开始之前，为了避免混乱，我们先统一一下名称：
 </p><ul>
-<li>����������ssh�ͻ��ˣ�����X�����xorg-server��������windows����ϵͳ��
+<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上
 </li>
-<li>Զ��������ssh����ˣ�����X�ͻ���firefox��������linux����ϵͳ��
+<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上
 </li>
 </ul>
 
 
 <p>
-���ȣ�����cygwin��setup��װ����<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> ��������ʹ�õ���32λ��cygwin��װ���򣩣�Ȼ��װ����ʾ����ѡ����Щ����Ϊ�˿���ͼ�ν��棬���밲װ������Щ����
+首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
 </p>
 <ul>
-<li>X11Ŀ¼�µ�xorg-server��������룩
+<li>X11目录下的xorg-server（此项必须）
 </li>
-<li>X11Ŀ¼�µ�xinit ��������룩
+<li>X11目录下的xinit （此项必须）
 </li>
-<li>NetĿ¼�µ�openssh ��Ҫ֧��ssh��Xת����Ҳ���밲װ��
+<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）
 </li>
 </ul>
 
 
 <p>
-��װ��֮�󣬴�cygwin��shell������startxwin�����½ǻ����X����ͼ�꣬������Ӧ�þ��㿪��X11�ķ����ˡ�Ȼ��򿪱��������ϵ�xterm���ڣ��Ҽ����½�X����ͼ�꣬���application &ndash;&gt; xterm�����ڴ򿪵�xterm���������룺
+安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &ndash;&gt; xterm），在打开的xterm窗口中输入：
 </p>
 
 
@@ -149,7 +149,7 @@ for the JavaScript code in this tag.
 
 
 <p>
-������ʾ����Զ�������ĵ�½���룬�������firefox��Ӧ��ok��
+根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
 </p>
 
 
@@ -159,7 +159,7 @@ for the JavaScript code in this tag.
 
 
 <p>
-���ǣ������״�ʹ��ssh��Xת��ʱ�����ɹ���������ȥ��&amp;ֱ������firefox����ʾError: no display specified�������˳���ǰ�ѵ�¼��ssh�����µ�½������-vѡ�
+但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
 </p>
 
 
@@ -168,7 +168,7 @@ for the JavaScript code in this tag.
 
 
 <p>
-������������ʾ��
+发现有如下提示：
 </p>
 
 
@@ -181,7 +181,7 @@ X11 forwarding request failed on channel 0
 
 
 <p>
-˵��Զ�������ϻ�δ��װxorg-x11-xauth�������ǣ�
+说明远程主机上还未安装xorg-x11-xauth包，于是：
 </p>
 
 
@@ -189,10 +189,10 @@ X11 forwarding request failed on channel 0
 </pre>
 
 <p>
-������ssh��½����firefox���Ե�Ƭ��windos����㵯����Ϥ��firefox���ڣ�It works��:-)
+再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
 </p>
 <p>
-cygwin�ٷ�����xorg��װ��ʹ�õ���ϸ˵����<br/>
+cygwin官方关于xorg安装和使用的详细说明：<br/>
 <a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br/>
 <a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
 </p>
