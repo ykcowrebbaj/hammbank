@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -243,80 +242,106 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
+1、完成本次课各res层指标的求取
 </p>
 
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
-
 <p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
+<img src="./20201230_数据仓库第三次课.assets/Snipaste_2021-01-02_18-45-51.png" alt="Snipaste_2021-01-02_18-45-51.png" />
+2、写出计算15日ltv的hql语句，并将计算结果截图
 </p>
+
 <div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
+<pre class="src src-sql">set hive.exec.mode.local.auto=true;  
+set hive.exec.mode.local.auto.inputbytes.max=262144;
+set hive.exec.mode.local.auto.input.files.max=5;
+
+create database if not exists game_center;
+use game_center;
+
+drop table if exists game_center.tmp_user_ltv15;
+create table if not exists game_center.tmp_user_ltv15 as 
+select t.channel_id,t.plat_id,t.server_id, 
+t.user_id,t.device_brand,t.device_type,t.reg_date,t.reg_time,t.role_id,t.role_name,t.role_create_date,t.role_create_time,
+t1.pay_date,case when t1.recharge_amount is null then 0 else t1.recharge_amount end as recharge_amount, 0 as operating_system
+from dw_user_basic_info t 
+left outer join 
+(
+  select channel_id,plat_id,user_id,server_id,from_unixtime(event_time,'yyyy-MM-dd') as pay_date,role_id,sum(recharge_amount) as recharge_amount
+  from ods_role_recharge  
+  group by channel_id,plat_id,user_id,server_id,from_unixtime(event_time,'yyyy-MM-dd'),role_id
+) t1 on (t1.channel_id=t.channel_id and t1.plat_id=t.plat_id and t1.server_id=t.server_id and t1.user_id=t.user_id and t1.role_id=t.role_id);
+
+
+drop table if exists game_center.res_ltv15_count;
+create table if not exists  game_center.res_ltv15_count as 
+select t.plat_id,t.channel_id,t.event_date, t.reg_users,ltv_15,ltv_15_users
+from 
+(
+  select plat_id,channel_id,reg_date as event_date, count(distinct user_id) as reg_users
+  from tmp_user_ltv15 
+  group by plat_id,channel_id,reg_date
+) t 
+left outer join 
+(
+  select plat_id,channel_id,reg_date as event_date, 
+  sum(case when pay_date&lt;=date_add(reg_date,14) then recharge_amount else 0 end) as ltv_15
+  from tmp_user_ltv15 
+  where recharge_amount&gt;0
+  group by plat_id,channel_id,reg_date
+) t1 on (t1.plat_id=t.plat_id and t1.channel_id=t.channel_id and t1.event_date=t.event_date)
+left outer join 
+(
+  select plat_id,channel_id,reg_date as event_date,
+  count(case when pay_date=date_add(reg_date,14)  then user_id end) as ltv_15_users
+  from 
+  (
+   select plat_id,channel_id,reg_date,pay_date,user_id
+   from tmp_user_ltv15 
+   where recharge_amount&gt;0
+   group by plat_id,channel_id,reg_date,pay_date,user_id
+  ) t 
+  group by plat_id,channel_id,reg_date
+) t2 on (t2.plat_id=t.plat_id and t2.channel_id=t.channel_id and t2.event_date=t.event_date);
 </pre>
 </div>
 
 <p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
+<img src="./20201230_数据仓库第三次课.assets/QQ图片20210102191238.png" alt="QQ图片20210102191238.png" />
+3、dw\<sub>user</sub>\<sub>behavior</sub>\<sub>info表中</sub>，求取每个平台、每个登录日期下，
+获得的元宝总量、元宝存量的总量及前一天的元宝存量的总量
 </p>
+
 <div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
+<pre class="src src-sql">set hive.exec.mode.local.auto=true;  
+set hive.exec.mode.local.auto.inputbytes.max=262144;
+set hive.exec.mode.local.auto.input.files.max=5;
+
+create database if not exists game_center;
+use game_center;
+
+drop table if exists game_center.res_stock_change;
+create table if not exists game_center.res_stock_change as 
+select login_date as event_date,plat_id,acer_stock-last_acer_stock as gain_acer_num,acer_stock,last_acer_stock
+from 
+(
+  select login_date,plat_id,acer_stock,
+  LAG(acer_stock,1,0) OVER(PARTITION BY plat_id ORDER BY login_date) AS last_acer_stock
+  from 
+  (
+    select login_date,plat_id,sum(acer_stock) as acer_stock
+    from dw_user_behavior_info 
+    group by login_date,plat_id
+  ) t 
+) t;
 </pre>
 </div>
 
-
 <p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
+<img src="./20201230_数据仓库第三次课.assets/QQ图片20210103162732.png" alt="QQ图片20210103162732.png" />
+其中，第三列gain\<sub>acer</sub>\<sub>num字段表示获得的元宝总量</sub>：正数表示当天的
+购入量+赠与量&gt;消耗量，负数表示当天的 购入量+赠与量&lt;消耗量
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
-
-<p>
-发现有如下提示：
-</p>
-<pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
-</pre>
-
-
-<p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
-</pre>
-</div>
-<p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
-</p>
-
-<p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
-</p>
-
-
-<hr />
 </div>
 </body>
 </html>

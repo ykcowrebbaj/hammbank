@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -243,80 +242,43 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
+简答：为什么要对HBase表进行预分区？
 </p>
 
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
+<ol class="org-ol">
+<li>增加数据读写效率：默认方式所有数据存在一个节点上，预分区将数据分散到多各节点上。</li>
+
+<li>负载均衡，防止数据倾斜：数据的rowkey分成多个区间，每个区间就是一个region，数据写入时，写入自己所在的范围的region</li>
+
+<li>方便集群容灾调度region：将数据分散存储到了多个region中，region的粒度更小</li>
+
+<li>优化Map数量</li>
+</ol>
 
 <p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
+用画图加文字的方式，描述HBase写入数据的流程（手画或画图软件均可）,并提供截图
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
-</pre>
+
+<ol class="org-ol">
+<li>客户端首先从zk找到meta表的region位置，然后读取meta表中的数据，meta表中存储了用户表的region信息</li>
+
+<li>根据namespace、表名和rowkey信息。找到写入数据对应的region信息</li>
+
+<li>找到这个region对应的regionServer，然后发送请求</li>
+
+<li>把数据分别写到HLog（write ahead log）和memstore各一份</li>
+
+<li>memstore达到阈值后把数据刷到磁盘，生成storeFile文件(溢写)</li>
+
+<li>删除HLog中的历史数据</li>
+</ol>
+
+
+<div class="figure">
+<p><img src="./20201218_HBase核心原理.assets/Snipaste_2020-12-19_00-46-55.png" alt="Snipaste_2020-12-19_00-46-55.png" />
+</p>
 </div>
-
-<p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
-</pre>
-</div>
-
-
-<p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
-
-<p>
-发现有如下提示：
-</p>
-<pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
-</pre>
-
-
-<p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
-</pre>
-</div>
-<p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
-</p>
-
-<p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
-</p>
-
-
-<hr />
 </div>
 </body>
 </html>

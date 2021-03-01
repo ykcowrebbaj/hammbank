@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -243,80 +242,124 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
+创建一个既分区又分桶的表，并向该分区分桶表中加载数据；最后在浏览器查看其文件列表，对列表结果截图。作业中还需要包括创建表的语句,
+插入数据语句,以及设置相关属性的语句
 </p>
 
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
+<ol class="org-ol">
+<li>准备数据：</li>
+</ol>
 
-<p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
-</pre>
-</div>
-
-<p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
-</pre>
-</div>
-
-
-<p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
-
-<p>
-发现有如下提示：
-</p>
 <pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
+cd ~
+cat &gt;order_partition.txt &lt;&lt;EOF
+01 110 2019-03-02
+02 120 2019-03-02
+03 130 2019-03-02
+04 140 2019-03-02
+05 150 2019-03-02
+06 160 2019-03-02
+07 170 2019-03-02
+08 180 2019-03-02
+09 190 2019-03-02
+10 200 2019-03-02
+11 210 2019-03-02
+12 220 2019-03-02
+13 230 2019-03-02
+14 240 2019-03-03
+15 250 2019-03-03
+16 260 2019-03-04
+17 270 2019-03-04
+18 280 2019-03-04
+19 290 2019-03-04
+20 300 2019-03-04
+EOF
 </pre>
 
+<ol class="org-ol">
+<li>分别创建普通表t\<sub>order和动态分区加分桶表order</sub>\<sub>dynamic</sub>\<sub>partition</sub>\<sub>and</sub>\<sub>bucket的表结构</sub></li>
+</ol>
 
-<p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
-</p>
 <div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
+<pre class="src src-sql">create database myhive;
+use myhive;
+--创建普通表t_order表结构
+CREATE TABLE `myhive.t_order`(
+    `order_number` STRING,
+    `order_price`  DOUBLE,
+    `order_time`   STRING
+) ROW FORMAT DELIMITED FIELDS TERMINATED BY ' ';
+
+--创建动态分区加分桶表order_dynamic_partition_and_bucket表结构
+CREATE TABLE `myhive.order_dynamic_partition_and_bucket`(
+    `order_number` STRING,
+    `order_price`  DOUBLE
+) PARTITIONED BY(`order_time` STRING)
+CLUSTERED BY(`order_number`) INTO 4 BUCKETS
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ' ';
 </pre>
 </div>
+
+<ol class="org-ol">
+<li>向普通表t\<sub>order加载数据</sub></li>
+</ol>
+
+<div class="org-src-container">
+<pre class="src src-sql">LOAD DATA LOCAL INPATH '/home/hadoop/order_partition.txt'
+OVERWRITE INTO TABLE `myhive.t_order`;
+</pre>
+</div>
+
+<ol class="org-ol">
+<li>加载数据到动态分区表order\<sub>dynamic</sub>\<sub>partition中</sub></li>
+</ol>
+
+<div class="org-src-container">
+<pre class="src src-sql">-- 开启动态分区功能
+set hive.exec.dynamic.partition=true;
+-- 设置hive为非严格模式
+set hive.exec.dynamic.partition.mode=nonstrict;
+-- 把t_order普通表中的数据动态加载到分区表order_dynamic_partition中
+insert into table order_dynamic_partition partition(order_time) select order_number, order_price, order_time from t_order;
+</pre>
+</div>
+
+<ol class="org-ol">
+<li>把t\<sub>order普通表中的数据动态分区分桶加载到order</sub>\<sub>dynamic</sub>\<sub>partition</sub>\<sub>and</sub>\<sub>bucket中</sub></li>
+</ol>
+
+<div class="org-src-container">
+<pre class="src src-sql">INSERT INTO TABLE `myhive.order_dynamic_partition_and_bucket` PARTITION(`order_time`) SELECT `order_number`, `order_price`, `order_time` FROM `myhive.t_order`;
+</pre>
+</div>
+
 <p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
+另外也可以使用sql文件通过hive直接导入：
+</p>
+
+<pre class="example">
+hive -f myhive_order_dynamic_partition_and_bucket.sql
+</pre>
+
+<p>
+运行结果：
 </p>
 
 <p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
+分区结构：
+</p>
+
+<p>
+<img src="./20201211_hive数仓工具应用.assets/Snipaste_2020-12-13_20-31-22.png" alt="Snipaste_2020-12-13_20-31-22.png" />
+分桶结构：
 </p>
 
 
-<hr />
+<div class="figure">
+<p><img src="./20201211_hive数仓工具应用.assets/Snipaste_2020-12-13_20-31-44.png" alt="Snipaste_2020-12-13_20-31-44.png" />
+</p>
+</div>
 </div>
 </body>
 </html>

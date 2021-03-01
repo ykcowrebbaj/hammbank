@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -243,80 +242,204 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
+1、通过scala语言开发spark程序，对hdfs上的文件进行单词计数统计，打印输出统计结果，并且提交任务到spark集群中运行
 </p>
 
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
-
 <p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
+1）pom.xml：
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
-</pre>
-</div>
 
-<p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
-</pre>
-</div>
-
-
-<p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
-
-<p>
-发现有如下提示：
-</p>
 <pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
+&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.spark&lt;/groupId&gt;
+        &lt;artifactId&gt;spark-core_2.11&lt;/artifactId&gt;
+        &lt;version&gt;2.3.3&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;!--如果插件下不下来则将这个打开--&gt;
+    &lt;!--        &lt;dependency&gt;--&gt;
+    &lt;!--            &lt;groupId&gt;net.alchim31.maven&lt;/groupId&gt;--&gt;
+    &lt;!--            &lt;artifactId&gt;scala-maven-plugin&lt;/artifactId&gt;--&gt;
+    &lt;!--            &lt;version&gt;3.2.2&lt;/version&gt;--&gt;
+    &lt;!--        &lt;/dependency&gt;--&gt;
+    &lt;!--如果插件下不下来则将这个打开--&gt;
+    &lt;!--        &lt;dependency&gt;--&gt;
+    &lt;!--            &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;--&gt;
+    &lt;!--            &lt;artifactId&gt;maven-shade-plugin&lt;/artifactId&gt;--&gt;
+    &lt;!--            &lt;version&gt;2.4.3&lt;/version&gt;--&gt;
+    &lt;!--        &lt;/dependency&gt;--&gt;
+&lt;/dependencies&gt;
+
+&lt;build&gt;
+    &lt;plugins&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;net.alchim31.maven&lt;/groupId&gt;
+            &lt;artifactId&gt;scala-maven-plugin&lt;/artifactId&gt;
+            &lt;version&gt;3.2.2&lt;/version&gt;
+            &lt;executions&gt;
+                &lt;execution&gt;
+                    &lt;goals&gt;
+                        &lt;goal&gt;compile&lt;/goal&gt;
+                        &lt;goal&gt;testCompile&lt;/goal&gt;
+                    &lt;/goals&gt;
+                    &lt;configuration&gt;
+                        &lt;args&gt;
+                            &lt;arg&gt;-dependencyfile&lt;/arg&gt;
+                            &lt;arg&gt;${project.build.directory}/.scala_dependencies&lt;/arg&gt;
+                        &lt;/args&gt;
+                    &lt;/configuration&gt;
+                &lt;/execution&gt;
+            &lt;/executions&gt;
+        &lt;/plugin&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+            &lt;artifactId&gt;maven-shade-plugin&lt;/artifactId&gt;
+            &lt;version&gt;2.4.3&lt;/version&gt;
+            &lt;executions&gt;
+                &lt;execution&gt;
+                    &lt;phase&gt;package&lt;/phase&gt;
+                    &lt;goals&gt;
+                        &lt;goal&gt;shade&lt;/goal&gt;
+                    &lt;/goals&gt;
+                    &lt;configuration&gt;
+                        &lt;filters&gt;
+                            &lt;filter&gt;
+                                &lt;artifact&gt;*:*&lt;/artifact&gt;
+                                &lt;excludes&gt;
+                                    &lt;exclude&gt;META-INF/*.SF&lt;/exclude&gt;
+                                    &lt;exclude&gt;META-INF/*.DSA&lt;/exclude&gt;
+                                    &lt;exclude&gt;META-INF/*.RSA&lt;/exclude&gt;
+                                &lt;/excludes&gt;
+                            &lt;/filter&gt;
+                        &lt;/filters&gt;
+                        &lt;transformers&gt;
+                            &lt;transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"&gt;
+                                &lt;mainClass&gt;&lt;/mainClass&gt;
+                            &lt;/transformer&gt;
+                        &lt;/transformers&gt;
+                    &lt;/configuration&gt;
+                &lt;/execution&gt;
+            &lt;/executions&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/build&gt;
 </pre>
 
+<p>
+2）scala源码：
+</p>
 
 <p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
+src/main/scala/com/kkb/spark/core/SparkCountCluster.scala:
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
+
+<pre class="example">
+package com.kkb.spark.core
+
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkConf, SparkContext}
+
+object SparkCountYarnCluster {
+  def main(args: Array[String]): Unit = {
+    val conf = new SparkConf().setAppName("WorkCount")
+    val sc = new SparkContext(conf)
+    val resultRDD: RDD[(String, Int)] = sc.textFile(args(0))
+      .flatMap(_.split(" "))
+      .map((_, 1))
+      .reduceByKey(_ + _)
+    resultRDD.saveAsTextFile(args(1))
+    sc.stop()
+  }
 </pre>
-</div>
+
 <p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
+3）构建：
+</p>
+
+<pre class="example">
+mvn clean package -Dmaven.test.skip=true
+</pre>
+
+<p>
+4）创建单词统计输入文件，并上传hdfs的"/"下：
+</p>
+
+<pre class="example">
+cat &lt;&lt;EOF &gt;word.txt
+hadoop hello spark
+spark word
+hello hadoop spark
+EOF
+
+hdfs dfs -put word.txt /
+hdfs dfs -put original-spark-core-demo001-1.0-SNAPSHOT.jar /
+</pre>
+
+<p>
+5）使用yarn cluster方式提交运行：
+</p>
+
+<pre class="example">
+bin/spark-submit --master yarn \
+--deploy-mode cluster \
+--class com.kkb.spark.core.SparkCountCluster  \
+--executor-memory 1g \
+hdfs://node01:8020/original-spark-core-demo001-1.0-SNAPSHOT.jar \
+hdfs://node01:8020/word.txt hdfs://node01:8020/output-yarn-cluster
+</pre>
+
+<p>
+运行结果：
 </p>
 
 <p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
+<img src="./20210113_sparkCore第一次课.assets/Snipaste_2021-01-14_18-17-36.png" alt="Snipaste_2021-01-14_18-17-36.png" />
+2、描述spark在yarn模式下，以cluster方式任务提交过程
 </p>
 
+<ol class="org-ol">
+<li>bin/spark-submit脚本启动，执行SparkSubmit里面的main方法</li>
 
-<hr />
+<li>提交任务到ResourceManager(RM)</li>
+
+<li>选择一台NodeManager(NM)启动Container，在该Container中运行ApplicationMaster(AM)进程，然后在AM中初始化Driver</li>
+
+<li>AM向RM申请划分Container的资源</li>
+
+<li>申请到资源后，封装并发送指令 bin/java
+CoarseGrainedExecutorBackend，启动Container，创建ExcutorBackend，并在ExcutorBackend内部创建Executor</li>
+
+<li>Driver将分解后的Task发送到Executor进行执行</li>
+
+<li>等待任务运行结束，SparkContext向RM申请注销，回收资源</li>
+
+<li>任务执行完成，RM回收资源</li>
+</ol>
+
+<p>
+3、填空题：
+</p>
+
+<p>
+spark-submit提交应用时，如果需要用到额外的jar包，该使用参数( &#x2013;jars )
+</p>
+
+<p>
+&#x2013;jars后面跟的参数是使用逗号隔开的列表，用以指定多个依赖的外部jar包
+</p>
+
+<p>
+4、判断题：
+</p>
+
+<p>
+spark standalone模式下，Driver跟Client处于同一个服务器上
+</p>
+
+<p>
+错。Standalone-Client模式下，Driver和Client都处于本地主机；而Standalone-Cluster模式下Driver和Client是分离的，Client一般处于本地主机，Driver一般处于远程spark集群服务器的worker中。
+</p>
 </div>
 </body>
 </html>

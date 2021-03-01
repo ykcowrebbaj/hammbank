@@ -1,71 +1,205 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-               "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
+<!-- 2021-03-01 周一 23:37 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ELK部署手册</title>
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<meta name="title" content="ELK部署手册"/>
-<meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2017-08-27T02:08+0800"/>
-<meta name="author" content="朱捷文"/>
-<meta name="description" content=""/>
-<meta name="keywords" content=""/>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
-  html { font-family: Times, serif; font-size: 12pt; }
-  .title  { text-align: center; }
-  .todo   { color: red; }
-  .done   { color: green; }
-  .tag    { background-color: #add8e6; font-weight:normal }
-  .target { }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
   .timestamp { color: #bebebe; }
   .timestamp-kwd { color: #5f9ea0; }
-  .right  {margin-left:auto; margin-right:0px;  text-align:right;}
-  .left   {margin-left:0px;  margin-right:auto; text-align:left;}
-  .center {margin-left:auto; margin-right:auto; text-align:center;}
-  p.verse { margin-left: 3% }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
   pre {
-	border: 1pt solid #AEBDCC;
-	background-color: #F3F5F7;
-	padding: 5pt;
-	font-family: courier, monospace;
-        font-size: 90%;
-        overflow:auto;
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
   }
-  table { border-collapse: collapse; }
-  td, th { vertical-align: top;  }
-  th.right  { text-align:center;  }
-  th.left   { text-align:center;   }
-  th.center { text-align:center; }
-  td.right  { text-align:right;  }
-  td.left   { text-align:left;   }
-  td.center { text-align:center; }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
   dt { font-weight: bold; }
-  div.figure { padding: 0.5em; }
-  div.figure p { text-align: center; }
-  div.inlinetask {
-    padding:10px;
-    border:2px solid gray;
-    margin:10px;
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
     background: #ffffcc;
   }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
   textarea { overflow-x: auto; }
-  .linenr { font-size:smaller }
-  .code-highlighted {background-color:#ffff00;}
-  .org-info-js_info-navigation { border-style:none; }
-  #org-info-js_console-label { font-size:10px; font-weight:bold;
-                               white-space:nowrap; }
-  .org-info-js_search-highlight {background-color:#ffff00; color:#000000;
-                                 font-weight:bold; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
   /*]]>*/-->
-</style><link rel="stylesheet" type="text/css" href="css/worg.css"/>
+</style>
+<link rel="stylesheet" type="text/css" href="css/worg.css"/>
 <script type="text/javascript">
 /*
 @licstart  The following is the entire license notice for the
 JavaScript code in this tag.
 
-Copyright (C) 2012-2013 Free Software Foundation, Inc.
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
 
 The JavaScript code in this tag is free software: you can
 redistribute it and/or modify it under the terms of the GNU
@@ -106,262 +240,219 @@ for the JavaScript code in this tag.
  }
 /*]]>*///-->
 </script>
-
 </head>
 <body>
-
-<div id="preamble">
-
-</div>
-
 <div id="content">
 <h1 class="title">ELK部署手册</h1>
-
-
-<p>
-未特殊说明的地方都表示ELK2，在EKL5处会特别标注
-</p>
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#sec-1">Elasticsearch</a>
+<li><a href="#org2481fd1">Elasticsearch</a>
 <ul>
-<li><a href="#sec-1-1">下载安装elasticsearch</a></li>
-<li><a href="#sec-1-2">修改elasticsearch的配置</a>
+<li><a href="#org21afc8c">下载安装elasticsearch</a></li>
+<li><a href="#org2e6f29c">修改elasticsearch的配置</a>
 <ul>
-<li><a href="#sec-1-2-1">设置提供服务的ip和端口号</a></li>
+<li><a href="#orge146a11">设置提供服务的ip和端口号</a></li>
 </ul>
 </li>
-<li><a href="#sec-1-3">优化elasticsearch</a>
+<li><a href="#orgb444613">优化elasticsearch</a>
 <ul>
-<li><a href="#sec-1-3-1">禁止elasticsearch使用虚拟内存</a></li>
-<li><a href="#sec-1-3-2">调整内核参数</a></li>
+<li><a href="#orge13325f">禁止elasticsearch使用虚拟内存</a></li>
+<li><a href="#org91534a0">调整内核参数</a></li>
 </ul>
 </li>
-<li><a href="#sec-1-4">测试和监控elasticsearch</a></li>
-<li><a href="#sec-1-5">运行elasticsearch</a></li>
+<li><a href="#org7a45f2a">测试和监控elasticsearch</a></li>
+<li><a href="#orgaae9851">运行elasticsearch</a></li>
 </ul>
 </li>
-<li><a href="#sec-2">Logstash</a>
+<li><a href="#orgab3964e">Logstash</a>
 <ul>
-<li><a href="#sec-2-1">下载安装logstash</a></li>
-<li><a href="#sec-2-2">创建并验证logstash的配置</a></li>
-<li><a href="#sec-2-3">优化logstash</a></li>
-<li><a href="#sec-2-4">logstash</a>
+<li><a href="#org8e428c3">下载安装logstash</a></li>
+<li><a href="#org16a3f26">创建并验证logstash的配置</a></li>
+<li><a href="#org7f58778">优化logstash</a></li>
+<li><a href="#orgb186ef9">logstash</a>
 <ul>
-<li><a href="#sec-2-4-1">logstash output-plugin redis 优化</a></li>
+<li><a href="#org11648c9">logstash output-plugin redis 优化</a></li>
 </ul>
 </li>
-<li><a href="#sec-2-5">logstash性能测试</a></li>
-<li><a href="#sec-2-6">logstash的常见配置</a></li>
-<li><a href="#sec-2-7">运行logstash</a></li>
+<li><a href="#orgbc8525b">logstash性能测试</a></li>
+<li><a href="#org2abf4ef">logstash的常见配置</a></li>
+<li><a href="#org602b53e">运行logstash</a></li>
 </ul>
 </li>
-<li><a href="#sec-3">Kibana</a>
+<li><a href="#orgac01ff2">Kibana</a>
 <ul>
-<li><a href="#sec-3-1">下载安装kibana</a></li>
-<li><a href="#sec-3-2">修改kibana配置</a></li>
-<li><a href="#sec-3-3">运行kibana</a></li>
+<li><a href="#orgaa8d81c">下载安装kibana</a></li>
+<li><a href="#org93b656a">修改kibana配置</a></li>
+<li><a href="#orge50bb86">运行kibana</a></li>
 </ul>
 </li>
-<li><a href="#sec-4">Filebeat</a>
+<li><a href="#org01bd27a">Filebeat</a>
 <ul>
-<li><a href="#sec-4-1">下载安装filebeat</a></li>
-<li><a href="#sec-4-2">filebeat的配置</a></li>
+<li><a href="#org2c60d5d">下载安装filebeat</a></li>
+<li><a href="#org54753e1">filebeat的配置</a></li>
 </ul>
 </li>
-<li><a href="#sec-5">安装Curator</a></li>
-<li><a href="#sec-6">ELK2生产系统部署</a>
+<li><a href="#orgf4ea0a7">安装Curator</a></li>
+<li><a href="#orge7d786a">ELK2生产系统部署</a>
 <ul>
-<li><a href="#sec-6-1">Logstash</a></li>
-<li><a href="#sec-6-2">Elasticsearch</a></li>
-<li><a href="#sec-6-3">Kibana</a></li>
-<li><a href="#sec-6-4">Filebeat</a></li>
-<li><a href="#sec-6-5">Marvel</a></li>
-<li><a href="#sec-6-6">Sense</a></li>
+<li><a href="#org59f045d">Logstash</a></li>
+<li><a href="#org479b7a4">Elasticsearch</a></li>
+<li><a href="#org52a1b8c">Kibana</a></li>
+<li><a href="#orgf43bee1">Filebeat</a></li>
+<li><a href="#orgd957dcf">Marvel</a></li>
+<li><a href="#org5f9fd15">Sense</a></li>
 </ul>
 </li>
-<li><a href="#sec-7">ELK5生产系统部署</a>
+<li><a href="#org4b618f0">ELK5生产系统部署</a>
 <ul>
-<li><a href="#sec-7-1">Filebeat</a></li>
-<li><a href="#sec-7-2">Logstash</a>
+<li><a href="#org583b364">Filebeat</a></li>
+<li><a href="#orgc7ab4c5">Logstash</a>
 <ul>
-<li><a href="#sec-7-2-1">centos6上安装logstash5</a></li>
-<li><a href="#sec-7-2-2">centos5上安装logstash</a></li>
+<li><a href="#orgf5813fa">centos6上安装logstash5</a></li>
+<li><a href="#orgbaa0d02">centos5上安装logstash</a></li>
 </ul>
 </li>
-<li><a href="#sec-7-3">Elasticsearch</a></li>
-<li><a href="#sec-7-4">Kibana</a></li>
+<li><a href="#orgeb4fcaf">Elasticsearch</a></li>
+<li><a href="#org5d8d7ef">Kibana</a></li>
 </ul>
 </li>
-<li><a href="#sec-8">ELK维护</a>
+<li><a href="#orge00aed3">ELK维护</a>
 <ul>
-<li><a href="#sec-8-1">清理ES数据</a></li>
+<li><a href="#orgf34d33a">清理ES数据</a></li>
 </ul>
 </li>
-<li><a href="#sec-9">单台log7行情每半小时记录数量</a></li>
-<li><a href="#sec-10">参考</a></li>
+<li><a href="#org67cec3e">单台log7行情每半小时记录数量</a></li>
+<li><a href="#org888dc4d">参考</a></li>
 </ul>
 </div>
 </div>
-
-<div id="outline-container-1" class="outline-2">
-<h2 id="sec-1">Elasticsearch</h2>
-<div class="outline-text-2" id="text-1">
-
-<p>elasticsearch需要Java 7以上的版本。使用 <code>java -version</code> 可以查看当前java版本。
+<p>
+未特殊说明的地方都表示ELK2，在EKL5处会特别标注
+</p>
+<div id="outline-container-org2481fd1" class="outline-2">
+<h2 id="org2481fd1">Elasticsearch</h2>
+<div class="outline-text-2" id="text-org2481fd1">
+<p>
+elasticsearch需要Java 7以上的版本。使用 <code>java -version</code> 可以查看当前java版本。
 </p>
 </div>
-
-<div id="outline-container-1-1" class="outline-3">
-<h3 id="sec-1-1">下载安装elasticsearch</h3>
-<div class="outline-text-3" id="text-1-1">
-
-
-
-
-<pre class="src src-sh"><span style="color: #483d8b;">cd</span> /opt
+<div id="outline-container-org21afc8c" class="outline-3">
+<h3 id="org21afc8c">下载安装elasticsearch</h3>
+<div class="outline-text-3" id="text-org21afc8c">
+<div class="org-src-container">
+<pre class="src src-sh">cd /opt
 wget https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/2.3.5/elasticsearch-2.3.5.tar.gz
 tar xzvf elasticsearch-2.3.5.tar.gz
 useradd elasticsearch
 chown elasticsearch:elasticsearch /opt/elasticsearch-2.3.5
 </pre>
-
+</div>
 <p>
 出于安全方面考虑elasticsearch不允许以root身份运行，所以需要chown修改。
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-1-2" class="outline-3">
-<h3 id="sec-1-2">修改elasticsearch的配置</h3>
-<div class="outline-text-3" id="text-1-2">
-
-
-
-
+<div id="outline-container-org2e6f29c" class="outline-3">
+<h3 id="org2e6f29c">修改elasticsearch的配置</h3>
+<div class="outline-text-3" id="text-org2e6f29c">
+<div class="org-src-container">
 <pre class="src src-sh">vi /opt/elasticsearch-2.3.5/config/elasticsearch.yml
 </pre>
-
-
 </div>
-
-<div id="outline-container-1-2-1" class="outline-4">
-<h4 id="sec-1-2-1">设置提供服务的ip和端口号</h4>
-<div class="outline-text-4" id="text-1-2-1">
-
-<p>默认只绑定loopback ip，只允许本地连接，若logstash和elasticsearch不安装在同一台主机上，需要修改elasticsearch的配置文件，绑定指定的ip(相当于白名单)：
+</div>
+<div id="outline-container-orge146a11" class="outline-4">
+<h4 id="orge146a11">设置提供服务的ip和端口号</h4>
+<div class="outline-text-4" id="text-orge146a11">
+<p>
+默认只绑定loopback ip，只允许本地连接，若logstash和elasticsearch不安装在同一台主机上，需要修改elasticsearch的配置文件，绑定指定的ip(相当于白名单)：
 </p>
-
-
-<pre class="example">network.host: 192.168.1.3
+<pre class="example">
+network.host: 192.168.1.3
 </pre>
-
 <p>
 注意，这样设置后取消了默认对loopback ip的绑定。
 </p>
+
 <p>
 绑定多个ip：
 </p>
-
-
-<pre class="example">network.host: [192.168.1.3, 127.0.0.1]
+<pre class="example">
+network.host: [192.168.1.3, 127.0.0.1]
 </pre>
-
 
 <p>
 elasticsearch默认使用9200端口提供服务，我们也可以把9200端口改为其他端口，比如：
 </p>
-
-
-<pre class="example">http.port: 9201
+<pre class="example">
+http.port: 9201
 </pre>
-
-
 </div>
 </div>
-
 </div>
 
-<div id="outline-container-1-3" class="outline-3">
-<h3 id="sec-1-3">优化elasticsearch</h3>
-<div class="outline-text-3" id="text-1-3">
-
-
+<div id="outline-container-orgb444613" class="outline-3">
+<h3 id="orgb444613">优化elasticsearch</h3>
+<div class="outline-text-3" id="text-orgb444613">
 </div>
-
-<div id="outline-container-1-3-1" class="outline-4">
-<h4 id="sec-1-3-1">禁止elasticsearch使用虚拟内存</h4>
-<div class="outline-text-4" id="text-1-3-1">
-
-<p>默认情况下elasticsearch启动后mlockall的值是false，可以通过配置文件设为true：
+<div id="outline-container-orge13325f" class="outline-4">
+<h4 id="orge13325f">禁止elasticsearch使用虚拟内存</h4>
+<div class="outline-text-4" id="text-orge13325f">
+<p>
+默认情况下elasticsearch启动后mlockall的值是false，可以通过配置文件设为true：
 </p>
-
-
-<pre class="example">bootstrap.memory_lock: true
+<pre class="example">
+bootstrap.memory_lock: true
 </pre>
-
 <p>
 启动elasticsearch后查看mlockall是否生效：
 </p>
-
-
+<div class="org-src-container">
 <pre class="src src-sh">curl http://localhost:9200/_nodes/process?pretty
 </pre>
-
+</div>
 
 <p>
 如果mlockall为false，则说明mlockall并没有开启，这种情况，最有可能是由于elasticsearch以非root用户启动，没有设定内存配置的权限。因此，在启动前需要以root用户身份运行 <code>ulimit -l unlimited</code> 命令。
 </p>
+
 <p>
 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-configuration.html">https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-configuration.html</a>
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-1-3-2" class="outline-4">
-<h4 id="sec-1-3-2">调整内核参数</h4>
-<div class="outline-text-4" id="text-1-3-2">
-
-
-<ul>
-<li>增加mmap counts（默认为65530），防止OOM：
-</li>
+<div id="outline-container-org91534a0" class="outline-4">
+<h4 id="org91534a0">调整内核参数</h4>
+<div class="outline-text-4" id="text-org91534a0">
+<ul class="org-ul">
+<li>增加mmap counts（默认为65530），防止OOM：</li>
 </ul>
-
-
-
-
-<pre class="src src-sh"><span style="color: #483d8b;">echo</span> -e <span style="color: #8b2252;">'\n\nvm.max_map_count = 262144'</span> &gt;&gt; /etc/sysctl.conf
+<div class="org-src-container">
+<pre class="src src-sh">echo -e '\n\nvm.max_map_count = 262144' &gt;&gt; /etc/sysctl.conf
 sysctl -w vm.max_map_count=262144
 </pre>
-
-
+</div>
+</div>
 </div>
 </div>
 
-</div>
-
-<div id="outline-container-1-4" class="outline-3">
-<h3 id="sec-1-4">测试和监控elasticsearch</h3>
-<div class="outline-text-3" id="text-1-4">
-
-
-
-
-<pre class="src src-sh">elasticsearch2&#21629;&#20196;&#65306;
-curl <span style="color: #8b2252;">'127.0.0.1:9200/_cat/thread_pool?v&amp;h=id,host,bt,ba,bs,bq,bqs,br,bl,bc,bmi,bma,bk'</span>
+<div id="outline-container-org7a45f2a" class="outline-3">
+<h3 id="org7a45f2a">测试和监控elasticsearch</h3>
+<div class="outline-text-3" id="text-org7a45f2a">
+<div class="org-src-container">
+<pre class="src src-sh">
+elasticsearch2命令：
+curl '127.0.0.1:9200/_cat/thread_pool?v&amp;h=id,host,bt,ba,bs,bq,bqs,br,bl,bc,bmi,bma,bk'
 </pre>
-
+</div>
 <p>
 bulk的默认队列大小为50，增加bulk队列大小到1000：
 </p>
-
-
-<pre class="example">threadpool:
+<pre class="example">
+threadpool:
     bulk:
 #        size: 30
         queue_size: 1000
@@ -369,128 +460,104 @@ bulk的默认队列大小为50，增加bulk队列大小到1000：
 # 或threadpool.bulk.queue_size: 1000
 </pre>
 
-
-
-<pre class="src src-sh">curl <span style="color: #8b2252;">'127.0.0.1:9200/_cat/thread_pool?v&amp;h=id,host,st,sa,ss,sq,sqs,sr,sl,sc,smi,sma,sk'</span>
+<div class="org-src-container">
+<pre class="src src-sh">curl '127.0.0.1:9200/_cat/thread_pool?v&amp;h=id,host,st,sa,ss,sq,sqs,sr,sl,sc,smi,sma,sk'
 </pre>
-
-
-<pre class="example">id   host      st    sa ss sq   sqs sr sl    sc smi sma sk 
+</div>
+<pre class="example">
+id   host      st    sa ss sq   sqs sr sl    sc smi sma sk 
 lync 127.0.0.1 fixed  0 13  0  1000  0 13 21789  13  13    
 </pre>
-
-<ul>
-<li>sa（search active）为线程池中正在执行查询任务的活跃线程数
-</li>
-<li>sq（search queue）为线程池中待查询任务队列中的任务堆积数
-</li>
-<li>sqs（search queue_size）配置定义的线程池任务队列允许存放的最大任务数
-</li>
-<li>sr（search rejected）被拒绝的查询任务数量
-</li>
-<li>sc（search completed）已完成的查询任务数量
-</li>
-<li>smi（search min）sma（search max）配置定义的最小和最大允许线程数，ss（search size）线程池中的线程数，sl（search largest）最高的活跃线程数。貌似这几个值都是相同的，由threadpool.search.size定义。
-</li>
+<ul class="org-ul">
+<li>sa（search active）为线程池中正在执行查询任务的活跃线程数</li>
+<li>sq（search queue）为线程池中待查询任务队列中的任务堆积数</li>
+<li>sqs（search queue_size）配置定义的线程池任务队列允许存放的最大任务数</li>
+<li>sr（search rejected）被拒绝的查询任务数量</li>
+<li>sc（search completed）已完成的查询任务数量</li>
+<li>smi（search min）sma（search max）配置定义的最小和最大允许线程数，ss（search size）线程池中的线程数，sl（search largest）最高的活跃线程数。貌似这几个值都是相同的，由threadpool.search.size定义。</li>
 </ul>
-
 
 <p>
 sq（search queue）中的任务，会逐个进入sa（search active）被消耗，所有完成的任务都会增加sc（search completed）计数器的值。（search queue）总是小于等于sqs（search queue size）值，当sq=sqs时说明es的查询线程池中的任务已经堆满，之后的任何查询都会被reject，即计数器sr（search rejected）的值会增加，同时客户端会收到429 Too Many Requests的http应答。在对es的查询并发量很大时会出现这种情况。因此可以修改sqs的值，增加查询线程池的容量，避免这种情况的发生，比如可以在/etc/elasticsearch/elasticsearch.yml配置文件中设置threadpool.search.queue_size: 10000，然后重启es生效。
 </p>
+
 <p>
 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/2.4/cat-thread-pool.html">https://www.elastic.co/guide/en/elasticsearch/reference/2.4/cat-thread-pool.html</a>
 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/2.4/modules-threadpool.html">https://www.elastic.co/guide/en/elasticsearch/reference/2.4/modules-threadpool.html</a>
 </p>
 
+
 <p>
 elasticsearch5命令：
 </p>
-
-
-<pre class="src src-sh">curl <span style="color: #8b2252;">'127.0.0.1:9200/_cat/thread_pool/search?v&amp;h=id,host,t,a,s,q,qs,r,l,c,mi,ma,k'</span>
+<div class="org-src-container">
+<pre class="src src-sh">curl '127.0.0.1:9200/_cat/thread_pool/search?v&amp;h=id,host,t,a,s,q,qs,r,l,c,mi,ma,k'
 </pre>
+</div>
 
-
-
-<pre class="example">id                     host           t     a  s q    qs r  l   c mi ma
+<pre class="example">
+id                     host           t     a  s q    qs r  l   c mi ma
 2Ex6Tnc9SqOFl-qGegvDwg 117.169.14.143 fixed 0 13 0 10000 0 13 100 13 13  
 </pre>
 
-
-
-<pre class="example">thread_pool.search.queue_size: 10000
+<pre class="example">
+thread_pool.search.queue_size: 10000
 </pre>
-
 <p>
 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/5.0/cat-thread-pool.html">https://www.elastic.co/guide/en/elasticsearch/reference/5.0/cat-thread-pool.html</a>
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-1-5" class="outline-3">
-<h3 id="sec-1-5">运行elasticsearch</h3>
-<div class="outline-text-3" id="text-1-5">
-
-
-
-
+<div id="outline-container-orgaae9851" class="outline-3">
+<h3 id="orgaae9851">运行elasticsearch</h3>
+<div class="outline-text-3" id="text-orgaae9851">
+<div class="org-src-container">
 <pre class="src src-sh">su - root
-<span style="color: #483d8b;">ulimit</span> -l unlimited
-<span style="color: #483d8b;">ulimit</span> -n 262144
+ulimit -l unlimited
+ulimit -n 262144
 su - elasticsearch
-<span style="color: #483d8b;">cd</span> /opt/elasticsearch-2.3.5/bin
-<span style="color: #a0522d;">ES_HEAP_SIZE</span>=6g ./elasticsearch -d
+cd /opt/elasticsearch-2.3.5/bin
+ES_HEAP_SIZE=6g ./elasticsearch -d
 </pre>
-
+</div>
 <p>
 参数-d是以后台方式运行程序
 </p>
 </div>
 </div>
-
 </div>
 
-<div id="outline-container-2" class="outline-2">
-<h2 id="sec-2">Logstash</h2>
-<div class="outline-text-2" id="text-2">
-
-<p>Logstash同样需要依赖于Java 7以上的版本。
+<div id="outline-container-orgab3964e" class="outline-2">
+<h2 id="orgab3964e">Logstash</h2>
+<div class="outline-text-2" id="text-orgab3964e">
+<p>
+Logstash同样需要依赖于Java 7以上的版本。
 </p>
 </div>
-
-<div id="outline-container-2-1" class="outline-3">
-<h3 id="sec-2-1">下载安装logstash</h3>
-<div class="outline-text-3" id="text-2-1">
-
-
-
-
-<pre class="src src-sh"><span style="color: #483d8b;">cd</span> /opt
+<div id="outline-container-org8e428c3" class="outline-3">
+<h3 id="org8e428c3">下载安装logstash</h3>
+<div class="outline-text-3" id="text-org8e428c3">
+<div class="org-src-container">
+<pre class="src src-sh">cd /opt
 wget https://download.elastic.co/logstash/logstash/logstash-2.3.4.tar.gz
 tar xzvf logstash-2.3.4.tar.gz
 mkdir /opt/logstash-2.3.4/log
 </pre>
-
-
+</div>
+</div>
 </div>
 
-</div>
-
-<div id="outline-container-2-2" class="outline-3">
-<h3 id="sec-2-2">创建并验证logstash的配置</h3>
-<div class="outline-text-3" id="text-2-2">
-
-
-
-
+<div id="outline-container-org16a3f26" class="outline-3">
+<h3 id="org16a3f26">创建并验证logstash的配置</h3>
+<div class="outline-text-3" id="text-org16a3f26">
+<div class="org-src-container">
 <pre class="src src-sh">vi /opt/logstash-2.3.4/bin/pipeline.conf
 </pre>
+</div>
 
-
-
-<pre class="example">input {
+<pre class="example">
+input {
     file {
         path =&gt; "/home/MobileServer/DATA/*/logdir/*.log"
         codec =&gt; plain {
@@ -508,74 +575,59 @@ output {
 #    stdout {}
 }
 </pre>
-
 <p>
 关于logstash配置文件的结构说明可以参考：
 <a href="https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html">https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html</a>
 </p>
+
 <p>
 验证logstash的配置文件pipeline.conf是否正确：
 </p>
-
-
-<pre class="src src-sh"><span style="color: #483d8b;">cd</span> /opt/logstash-2.3.4/bin/
+<div class="org-src-container">
+<pre class="src src-sh">cd /opt/logstash-2.3.4/bin/
 logstash -tf pipeline.conf
 </pre>
-
+</div>
 <p>
 若输出 <code>Configuration OK</code> 则表示正确。
 </p>
+
 <p>
 另外，还需要注意，设置了/etc/sysconfig/network中的HOSTNAME后，需要再把该主机名加入/etc/hosts中，否则传送给elasticsearch的数据的host字段值会以0.0.0.0替代主机名。
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-2-3" class="outline-3">
-<h3 id="sec-2-3">优化logstash</h3>
-<div class="outline-text-3" id="text-2-3">
-
+<div id="outline-container-org7f58778" class="outline-3">
+<h3 id="org7f58778">优化logstash</h3>
 </div>
-
+<div id="outline-container-orgb186ef9" class="outline-3">
+<h3 id="orgb186ef9">logstash</h3>
+<div class="outline-text-3" id="text-orgb186ef9">
 </div>
-
-<div id="outline-container-2-4" class="outline-3">
-<h3 id="sec-2-4">logstash</h3>
-<div class="outline-text-3" id="text-2-4">
-
-
-</div>
-
-<div id="outline-container-2-4-1" class="outline-4">
-<h4 id="sec-2-4-1">logstash output-plugin redis 优化</h4>
-<div class="outline-text-4" id="text-2-4-1">
-
-<p>logstash的redis output插件，batch默认为false，分别表示每产生一个event都需要RPUSH一次到redis。batch设为true时则表示收集到一定量的events后再RPUSH一次，如果日志收集产生的积压发生在logstash的output到redis阶段（在几百个logstash连接输出到同一台redis时容易出现这种情况），那么batch能明显增加logstash到redis的events吞吐量。目前batch开关只对data_type为list时生效，所以当batch设为true时需要同时指定data_type为list。另外两个与batch相关的性能优化参数为batch_events和batch_timeout，分别表示存满batch_events条events或超过batch_timeout秒后，RPUSH一次。batch_events默认为50，batch_timeout默认为5。按照我们目前的经验，先调整batch_timeout到1，然后逐步增加batch_events，然后观察kibana上显示的每秒events吞吐量，不再增长之后，再适当增加-b即LS_OPTS="-b xxxx"（用于改善logstash内部的input到output之间的吞吐量）。经过线上测试，在不另外配置-b的情况下，没有配置redis output plugin的batch时，每秒30~40条events的吞吐量，在增加了batch相关参数后。
+<div id="outline-container-org11648c9" class="outline-4">
+<h4 id="org11648c9">logstash output-plugin redis 优化</h4>
+<div class="outline-text-4" id="text-org11648c9">
+<p>
+logstash的redis output插件，batch默认为false，分别表示每产生一个event都需要RPUSH一次到redis。batch设为true时则表示收集到一定量的events后再RPUSH一次，如果日志收集产生的积压发生在logstash的output到redis阶段（在几百个logstash连接输出到同一台redis时容易出现这种情况），那么batch能明显增加logstash到redis的events吞吐量。目前batch开关只对data_type为list时生效，所以当batch设为true时需要同时指定data_type为list。另外两个与batch相关的性能优化参数为batch_events和batch_timeout，分别表示存满batch_events条events或超过batch_timeout秒后，RPUSH一次。batch_events默认为50，batch_timeout默认为5。按照我们目前的经验，先调整batch_timeout到1，然后逐步增加batch_events，然后观察kibana上显示的每秒events吞吐量，不再增长之后，再适当增加-b即LS_OPTS="-b xxxx"（用于改善logstash内部的input到output之间的吞吐量）。经过线上测试，在不另外配置-b的情况下，没有配置redis output plugin的batch时，每秒30~40条events的吞吐量，在增加了batch相关参数后。
 </p>
-
-
-<pre class="example">data_type =&gt; "list"
+<pre class="example">
+data_type =&gt; "list"
 batch =&gt; true
 batch_events =&gt; 500
 batch_timeout =&gt; 1
 </pre>
-
 <p>
 达到了每秒1000条events的日志吞吐量。此时cpu峰值可达到100（当前服务器为8核，跑满为800）左右，当处理完堆积后，events吞吐量回落到每秒100条以下时，cpu峰值在20以下。当前生产环境可以再增加batch_events或logstash的-b，来进一步提高日志吞吐量，但我们并没有这么做，因为考虑到日志量较大的情况下logstash可能占用较多的cpu，抢占服务程序的资源，所以暂时没有调增上去。
-</p></div>
+</p>
 </div>
-
 </div>
-
-<div id="outline-container-2-5" class="outline-3">
-<h3 id="sec-2-5">logstash性能测试</h3>
-<div class="outline-text-3" id="text-2-5">
-
-
-
-
-<pre class="example">input {
+</div>
+<div id="outline-container-orgbc8525b" class="outline-3">
+<h3 id="orgbc8525b">logstash性能测试</h3>
+<div class="outline-text-3" id="text-orgbc8525b">
+<pre class="example">
+input {
     file {
         path =&gt; "/home/MobileServer/DATA/*/logdir/*.log"
         codec =&gt; plain {
@@ -594,38 +646,30 @@ output {
     stdout {}
 }
 </pre>
-
 <p>
 flush_size默认值为500，workers默认值为1。这两个参数对logstash与elasticsearch间的数据传输性能影响较大。flush_size的值最好设的要比pipeline-batch-size大。每增加一个worker都会多建立一条与elasticsearch的9200端口的长连接。另外使用pv命令做性能测试时需要复制一份输出到标准输出，所以需要开启stdout {}。
 参考：
 <a href="https://www.elastic.co/guide/en/logstash/current/plugins-outputs-elasticsearch.html">https://www.elastic.co/guide/en/logstash/current/plugins-outputs-elasticsearch.html</a>
 </p>
 
-
-
-<pre class="src src-sh"><span style="color: #a0522d;">LS_HEAP_SIZE</span>=4g /opt/logstash/bin/logstash  -w 10 -b 3000 -f /etc/logstash/conf.d/pipeline.conf |pv -rbt &gt;/dev/null
+<div class="org-src-container">
+<pre class="src src-sh">LS_HEAP_SIZE=4g /opt/logstash/bin/logstash  -w 10 -b 3000 -f /etc/logstash/conf.d/pipeline.conf |pv -rbt &gt;/dev/null
 </pre>
-
-<p>
-其中LS_HEAP_SIZE是为logstash的jvm设置的MaxHeapSize值，默认为1g，程序运行后可以通过 <code>jmap -heap &lt;pid&gt;|grep MaxHeapSize</code> 查看设置是否生效。-w或&ndash;pipeline-workers，为pipeline-workers线程的数量，默认与多核cpu的核心数相同，可以设置高于cpu核心数来增加性能。（"The number of workers may be set higher than the number of CPU cores since outputs often spend idle time in I/O wait conditions."）。-b或&ndash;pipeline-batch-size为，默认值是150，表示在执行filters和outputs前，单个pipeline-worker线程能够收集到的最大events量。增加pipeline-batch-size可以大幅提升性能，但有时有需要同时增加LS_HEAP_SIZE来防止性能下滑。详细可以参考：
-<a href="https://www.elastic.co/guide/en/logstash/current/pipeline.html">https://www.elastic.co/guide/en/logstash/current/pipeline.html</a>
-</p></div>
-
 </div>
-
-<div id="outline-container-2-6" class="outline-3">
-<h3 id="sec-2-6">logstash的常见配置</h3>
-<div class="outline-text-3" id="text-2-6">
-
-<ul>
-<li>filebeat &ndash;&gt; logstash &ndash;&gt;elasticsearch时，logstash的配置：
-</li>
+<p>
+其中LS_HEAP_SIZE是为logstash的jvm设置的MaxHeapSize值，默认为1g，程序运行后可以通过 <code>jmap -heap &lt;pid&gt;|grep MaxHeapSize</code> 查看设置是否生效。-w或&#x2013;pipeline-workers，为pipeline-workers线程的数量，默认与多核cpu的核心数相同，可以设置高于cpu核心数来增加性能。（"The number of workers may be set higher than the number of CPU cores since outputs often spend idle time in I/O wait conditions."）。-b或&#x2013;pipeline-batch-size为，默认值是150，表示在执行filters和outputs前，单个pipeline-worker线程能够收集到的最大events量。增加pipeline-batch-size可以大幅提升性能，但有时有需要同时增加LS_HEAP_SIZE来防止性能下滑。详细可以参考：
+<a href="https://www.elastic.co/guide/en/logstash/current/pipeline.html">https://www.elastic.co/guide/en/logstash/current/pipeline.html</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org2abf4ef" class="outline-3">
+<h3 id="org2abf4ef">logstash的常见配置</h3>
+<div class="outline-text-3" id="text-org2abf4ef">
+<ul class="org-ul">
+<li>filebeat &#x2013;&gt; logstash &#x2013;&gt;elasticsearch时，logstash的配置：</li>
 </ul>
-
-
-
-
-<pre class="example">input {
+<pre class="example">
+input {
   beats {
     port =&gt; 5044
   }
@@ -640,16 +684,11 @@ output {
 }
 </pre>
 
-
-<ul>
-<li>redis &ndash;&gt; logstash &ndash;&gt;elasticsearch时，logstash的配置：
-</li>
+<ul class="org-ul">
+<li>redis &#x2013;&gt; logstash &#x2013;&gt;elasticsearch时，logstash的配置：</li>
 </ul>
-
-
-
-
-<pre class="example">input {
+<pre class="example">
+input {
     redis {
         host =&gt;  "127.0.0.1"
         port =&gt; 6379
@@ -668,145 +707,107 @@ output {
         workers =&gt; 10
     }
 </pre>
-
 <p>
 data_type和key没有默认值，必须手动指定。表示使用redis的BLPOP命令，读取键名为filebeat的列表键。threads为logstash作为客户端与redis间建立的长连接数，默认为1，适当增加对提升吞吐量略有帮助，但要结合对logstash output和elasticsearch的index性能，注意低吞吐量的瓶颈位置。batch_count作用不大。
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-2-7" class="outline-3">
-<h3 id="sec-2-7">运行logstash</h3>
-<div class="outline-text-3" id="text-2-7">
-
-
-
-
-<pre class="src src-sh"><span style="color: #483d8b;">cd</span> /opt/logstash-2.3.4/bin/
-nohup ./logstash agent -f pipeline.conf -w 10 -b 3000 -l ../log/log-<span style="color: #ff00ff;">`date +%Y%m%d-%s`</span>.log &amp;
+<div id="outline-container-org602b53e" class="outline-3">
+<h3 id="org602b53e">运行logstash</h3>
+<div class="outline-text-3" id="text-org602b53e">
+<div class="org-src-container">
+<pre class="src src-sh">cd /opt/logstash-2.3.4/bin/
+nohup ./logstash agent -f pipeline.conf -w 10 -b 3000 -l ../log/log-`date +%Y%m%d-%s`.log &amp;
 </pre>
-
+</div>
 <p>
 logstash默认把log发送到标准输出，通过-l参数可以为log指定写入的文件，如果-l指定的文件已存在，则追加log到该文件的末尾。-f指定logstash的配置文件。
 </p>
 </div>
 </div>
-
 </div>
 
-<div id="outline-container-3" class="outline-2">
-<h2 id="sec-3">Kibana</h2>
-<div class="outline-text-2" id="text-3">
-
-
+<div id="outline-container-orgac01ff2" class="outline-2">
+<h2 id="orgac01ff2">Kibana</h2>
+<div class="outline-text-2" id="text-orgac01ff2">
 </div>
-
-<div id="outline-container-3-1" class="outline-3">
-<h3 id="sec-3-1">下载安装kibana</h3>
-<div class="outline-text-3" id="text-3-1">
-
-
-
-
-<pre class="src src-sh"><span style="color: #483d8b;">cd</span> /opt
+<div id="outline-container-orgaa8d81c" class="outline-3">
+<h3 id="orgaa8d81c">下载安装kibana</h3>
+<div class="outline-text-3" id="text-orgaa8d81c">
+<div class="org-src-container">
+<pre class="src src-sh">cd /opt
 wget https://download.elastic.co/kibana/kibana/kibana-4.5.4-linux-x64.tar.gz
 tar xzvf kibana-4.5.4-linux-x64.tar.gz
 </pre>
-
-
+</div>
+</div>
 </div>
 
-</div>
-
-<div id="outline-container-3-2" class="outline-3">
-<h3 id="sec-3-2">修改kibana配置</h3>
-<div class="outline-text-3" id="text-3-2">
-
-<p>若elasticsearch不装在本机上，需要在配置文件kibana.yml中设置elasticsearch.url变量，指向elasticsearch的实例：
+<div id="outline-container-org93b656a" class="outline-3">
+<h3 id="org93b656a">修改kibana配置</h3>
+<div class="outline-text-3" id="text-org93b656a">
+<p>
+若elasticsearch不装在本机上，需要在配置文件kibana.yml中设置elasticsearch.url变量，指向elasticsearch的实例：
 </p>
-
-
+<div class="org-src-container">
 <pre class="src src-sh">vi config/kibana.yml
 </pre>
-
+</div>
 <p>
 比如：
 </p>
-
-
-<pre class="example">elasticsearch.url: "http://192.168.1.3:9200"
+<pre class="example">
+elasticsearch.url: "http://192.168.1.3:9200"
 </pre>
-
-
+</div>
 </div>
 
-</div>
-
-<div id="outline-container-3-3" class="outline-3">
-<h3 id="sec-3-3">运行kibana</h3>
-<div class="outline-text-3" id="text-3-3">
-
-
-
-
-<pre class="src src-sh"><span style="color: #483d8b;">cd</span> /opt/kibana-4.5.4-linux-x64/bin/
+<div id="outline-container-orge50bb86" class="outline-3">
+<h3 id="orge50bb86">运行kibana</h3>
+<div class="outline-text-3" id="text-orge50bb86">
+<div class="org-src-container">
+<pre class="src src-sh">cd /opt/kibana-4.5.4-linux-x64/bin/
 nohup ./kibana &amp;
 </pre>
-
+</div>
 <p>
 在浏览器中输入：
 <a href="http://yourhost.com:5601">http://yourhost.com:5601</a>
 </p>
 </div>
 </div>
-
 </div>
 
-<div id="outline-container-4" class="outline-2">
-<h2 id="sec-4">Filebeat</h2>
-<div class="outline-text-2" id="text-4">
-
-
+<div id="outline-container-org01bd27a" class="outline-2">
+<h2 id="org01bd27a">Filebeat</h2>
+<div class="outline-text-2" id="text-org01bd27a">
 </div>
-
-<div id="outline-container-4-1" class="outline-3">
-<h3 id="sec-4-1">下载安装filebeat</h3>
-<div class="outline-text-3" id="text-4-1">
-
-
-
-
-<pre class="src src-sh"><span style="color: #483d8b;">cd</span> /opt
+<div id="outline-container-org2c60d5d" class="outline-3">
+<h3 id="org2c60d5d">下载安装filebeat</h3>
+<div class="outline-text-3" id="text-org2c60d5d">
+<div class="org-src-container">
+<pre class="src src-sh">cd /opt
 wget https://download.elastic.co/beats/filebeat/filebeat-1.3.0-x86_64.tar.gz
 tar xzvf filebeat-1.3.0-x86_64.tar.gz
 </pre>
-
 </div>
-
 </div>
-
-<div id="outline-container-4-2" class="outline-3">
-<h3 id="sec-4-2">filebeat的配置</h3>
-<div class="outline-text-3" id="text-4-2">
-
-
-
-
+</div>
+<div id="outline-container-org54753e1" class="outline-3">
+<h3 id="org54753e1">filebeat的配置</h3>
+<div class="outline-text-3" id="text-org54753e1">
+<div class="org-src-container">
 <pre class="src src-sh">mv /opt/filebeat-1.3.0-x86_64/filebeat.yml /opt/filebeat-1.3.0-x86_64/filebeat.yml.sample
 vi /opt/filebeat-1.3.0-x86_64/filebeat.yml
 </pre>
+</div>
 
-
-<ul>
-<li>logfile &ndash;&gt; filebeat &ndash;&gt; elasticsearch时，filebeat的配置：
-</li>
+<ul class="org-ul">
+<li>logfile &#x2013;&gt; filebeat &#x2013;&gt; elasticsearch时，filebeat的配置：</li>
 </ul>
-
-
-
-
-<pre class="example">filebeat:
+<pre class="example">
+filebeat:
   prospectors:
     -
       paths:
@@ -836,19 +837,15 @@ logging:
     keepfiles: 5
     rotateeverybytes: 10485760
 </pre>
-
 <p>
 此处增加bulk_max_size可以提升吞吐量，默认为50。
 </p>
-<ul>
-<li>logfile &ndash;&gt; filebeat &ndash;&gt; logstash时，filebeat的配置：
-</li>
+
+<ul class="org-ul">
+<li>logfile &#x2013;&gt; filebeat &#x2013;&gt; logstash时，filebeat的配置：</li>
 </ul>
-
-
-
-
-<pre class="example">filebeat:
+<pre class="example">
+filebeat:
   prospectors:
     -
       paths:
@@ -879,20 +876,16 @@ logging:
     keepfiles: 5
     rotateeverybytes: 10485760
 </pre>
-
 <p>
 此处bulk_max_size默认为2048。
 <a href="https://www.elastic.co/guide/en/beats/filebeat/current/logstash-output.html">https://www.elastic.co/guide/en/beats/filebeat/current/logstash-output.html</a>
 </p>
-<ul>
-<li>logfile &ndash;&gt; filebeat &ndash;&gt; redis时，filebeat的配置：
-</li>
+
+<ul class="org-ul">
+<li>logfile &#x2013;&gt; filebeat &#x2013;&gt; redis时，filebeat的配置：</li>
 </ul>
-
-
-
-
-<pre class="example">filebeat:
+<pre class="example">
+filebeat:
   prospectors:
     -
       paths:
@@ -910,29 +903,27 @@ output:
     password: foobared
 #    bulk_max_size: 8192
 </pre>
-
 <p>
 此处增加harvester_buffer_size有助于提升吞吐量，默认为16384。
 </p>
 
 
-
-
-<pre class="src src-sh"><span style="color: #483d8b;">cd</span> /tmp
+<div class="org-src-container">
+<pre class="src src-sh">cd /tmp
 curl -O http://download.redis.io/releases/redis-3.2.3.tar.gz
 tar xzvf redis-3.2.3.tar.gz
-<span style="color: #483d8b;">cd</span> redis-3.2.3
-make <span style="color: #a0522d;">PREFIX</span>=/opt/redis install
-<span style="color: #483d8b;">cd</span> /opt/redis
+cd redis-3.2.3
+make PREFIX=/opt/redis install
+cd /opt/redis
 mv bin/* .
 rm -rf /opt/redis/bin
 vi 6379.conf
 </pre>
+</div>
 
 
-
-
-<pre class="example">port 6379
+<pre class="example">
+port 6379
 tcp-backlog 511
 timeout 0
 tcp-keepalive 300
@@ -981,71 +972,62 @@ client-output-buffer-limit pubsub 32mb 8mb 60
 hz 10
 aof-rewrite-incremental-fsync yes
 </pre>
-
 <p>
 相对redis编译好的默认配置，主要是设置了daemonize，去掉了save，去除bind回还ip提供远程程序读写，去除save，设置requirepass密码。其他优化参数等我以后需要再加入。另外，提供远程访问的redis一定要设好防火墙策略。
 此外filebeat写入redis的为列表键（filebeat5.0可以通过设置datatype为channel使用redis的订阅发布功能），键空间内的默认键名为filebeat，可以通过 <code>llen filebeat</code> 查看是否产生堆积，找出性能瓶颈。
 </p>
-
 </div>
 </div>
-
 </div>
 
-<div id="outline-container-5" class="outline-2">
-<h2 id="sec-5">安装Curator</h2>
-<div class="outline-text-2" id="text-5">
 
-
-
-
+<div id="outline-container-orgf4ea0a7" class="outline-2">
+<h2 id="orgf4ea0a7">安装Curator</h2>
+<div class="outline-text-2" id="text-orgf4ea0a7">
+<div class="org-src-container">
 <pre class="src src-sh">yum install python-pip
 pip install elasticsearch-curator
 </pre>
-
-
-
+</div>
+</div>
 </div>
 
-</div>
 
-<div id="outline-container-6" class="outline-2">
-<h2 id="sec-6">ELK2生产系统部署</h2>
-<div class="outline-text-2" id="text-6">
-
-<p>由于目前生产系统都是使用的RHEL或CENTOS，为尽量简化部署步奏，我们打算以rpm包来进行部署。
+<div id="outline-container-orge7d786a" class="outline-2">
+<h2 id="orge7d786a">ELK2生产系统部署</h2>
+<div class="outline-text-2" id="text-orge7d786a">
+<p>
+由于目前生产系统都是使用的RHEL或CENTOS，为尽量简化部署步奏，我们打算以rpm包来进行部署。
 </p>
 </div>
-
-<div id="outline-container-6-1" class="outline-3">
-<h3 id="sec-6-1">Logstash</h3>
-<div class="outline-text-3" id="text-6-1">
-
-<p>rpm方式安装的logstash，以服务方式启动时是无法在命令行中设定参数的，因此，需要通过修改启动脚本/etc/init.d/logstash，或/etc/sysconfig/logstash配置文件用来配置logstash程序的启动参数。
+<div id="outline-container-org59f045d" class="outline-3">
+<h3 id="org59f045d">Logstash</h3>
+<div class="outline-text-3" id="text-org59f045d">
+<p>
+rpm方式安装的logstash，以服务方式启动时是无法在命令行中设定参数的，因此，需要通过修改启动脚本/etc/init.d/logstash，或/etc/sysconfig/logstash配置文件用来配置logstash程序的启动参数。
 </p>
-
-
+<div class="org-src-container">
 <pre class="src src-sh">rpm -ivh https://download.elastic.co/logstash/logstash/packages/centos/logstash-2.4.0.noarch.rpm
-sed -i <span style="color: #8b2252;">'s/LS_USER=logstash/LS_USER=root/'</span> /etc/init.d/logstash
-sed -i <span style="color: #8b2252;">'s/LS_GROUP=logstash/LS_GROUP=root/'</span> /etc/init.d/logstash
-<span style="color: #b22222;"># </span><span style="color: #b22222;">rehl5&#31995;&#32479;&#38656;&#35201;&#20462;&#25913;&#21551;&#21160;&#33050;&#26412;&#65292;&#21435;&#38500;chroot&#21629;&#20196;&#65292;&#22240;&#20026;&#20302;&#29256;&#26412;&#30340;chroot&#19981;&#25903;&#25345;&#21551;&#21160;&#33050;&#26412;&#20013;&#24102;&#21442;&#25968;&#30340;chroot&#21629;&#20196;&#12290;</span>
-sed -i <span style="color: #8b2252;">'s/.*chroot.*/#&amp;\n  nice -n ${LS_NICE} sh -c "/'</span> /etc/init.d/logstash
-<span style="color: #b22222;"># </span><span style="color: #b22222;">&#22914;&#38656;&#35201;&#23545;logstash&#20248;&#21270;&#65292;&#36816;&#34892;&#19979;&#38754;&#35821;&#21477;</span>
-<span style="color: #b22222;"># </span><span style="color: #b22222;">sed -i 's/LS_OPTS=""/LS_OPTS="-b 5000"/' /etc/init.d/logstash</span>
-<span style="color: #b22222;"># </span><span style="color: #b22222;">sed -i 's/LS_HEAP_SIZE="1g"/LS_HEAP_SIZE="4g"/' /etc/init.d/logstash</span>
+sed -i 's/LS_USER=logstash/LS_USER=root/' /etc/init.d/logstash
+sed -i 's/LS_GROUP=logstash/LS_GROUP=root/' /etc/init.d/logstash
+# rehl5系统需要修改启动脚本，去除chroot命令，因为低版本的chroot不支持启动脚本中带参数的chroot命令。
+sed -i 's/.*chroot.*/#&amp;\n  nice -n ${LS_NICE} sh -c "/' /etc/init.d/logstash
+# 如需要对logstash优化，运行下面语句
+# sed -i 's/LS_OPTS=""/LS_OPTS="-b 5000"/' /etc/init.d/logstash
+# sed -i 's/LS_HEAP_SIZE="1g"/LS_HEAP_SIZE="4g"/' /etc/init.d/logstash
 
 </pre>
-
+</div>
 
 <p>
 vi /etc/logstash/conf.d/pipeline.conf
 </p>
+
 <p>
-log_files &ndash;&gt; logstash &ndash;&gt; redis
+log_files &#x2013;&gt; logstash &#x2013;&gt; redis
 </p>
-
-
-<pre class="example">input {
+<pre class="example">
+input {
     file {
         path =&gt; "/home/MobileServer/DATA/*/logdir/*.log"
         codec =&gt; plain {
@@ -1080,18 +1062,17 @@ output{
         }
 }
 </pre>
-
 <p>
 以上key没有默认值，必须加该字段，否则logstash启动会报错。password最好用引号引起来，因为logstash遇到特殊字符解析会异常。另外output中可以设定workers的数量，增加logstash和redis间的吞吐率，但这样会增加logstash与redis建立的长连接数量。当从log文件读取到redis的日志量很大时，建议使用filebeat（需要centos6及以上的系统）来替代logstash。
 </p>
 
+
 <p>
-redis &ndash;&gt; logstash &ndash;&gt; elasticsearch
+redis &#x2013;&gt; logstash &#x2013;&gt; elasticsearch
 </p>
 
-
-
-<pre class="example">input {
+<pre class="example">
+input {
     redis {
         host =&gt;  "192.168.1.3"
         port =&gt; 6379
@@ -1109,60 +1090,51 @@ output {
     }
 </pre>
 
-
-
+<div class="org-src-container">
 <pre class="src src-sh">service logstash start
 </pre>
-
+</div>
 
 <p>
 记录读取文件的偏移量：
 <i>var/lib/logstash</i>.sincedb_*
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-6-2" class="outline-3">
-<h3 id="sec-6-2">Elasticsearch</h3>
-<div class="outline-text-3" id="text-6-2">
-
-
-
-
+<div id="outline-container-org479b7a4" class="outline-3">
+<h3 id="org479b7a4">Elasticsearch</h3>
+<div class="outline-text-3" id="text-org479b7a4">
+<div class="org-src-container">
 <pre class="src src-sh">rpm -ivh https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/rpm/elasticsearch/2.4.0/elasticsearch-2.4.0.rpm
 mv /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.sample 
 </pre>
-
+</div>
 
 <p>
 vi /etc/elasticsearch/elasticsearch.yml设置启动参数
 </p>
-
-
-<pre class="example">network.host: [192.168.1.3, 127.0.0.1]
+<pre class="example">
+network.host: [192.168.1.3, 127.0.0.1]
 bootstrap.memory_lock: true
 threadpool.search.queue_size: 10000
 </pre>
 
-
 <p>
 可以通过修改/etc/sysconfig/elasticsearch，调整启动参数。
 </p>
-
-
-<pre class="src src-sh">sed -i <span style="color: #8b2252;">'s/#ES_HEAP_SIZE=2g/&amp;\nES_HEAP_SIZE=5g/'</span> /etc/sysconfig/elasticsearch
-sed -i <span style="color: #8b2252;">'s/#MAX_OPEN_FILES=65536/&amp;\nMAX_OPEN_FILES=524288/'</span> /etc/sysconfig/elasticsearch
-sed -i <span style="color: #8b2252;">'s/#MAX_LOCKED_MEMORY=unlimited/&amp;\nMAX_LOCKED_MEMORY=unlimited/'</span> /etc/sysconfig/elasticsearch
+<div class="org-src-container">
+<pre class="src src-sh">sed -i 's/#ES_HEAP_SIZE=2g/&amp;\nES_HEAP_SIZE=5g/' /etc/sysconfig/elasticsearch
+sed -i 's/#MAX_OPEN_FILES=65536/&amp;\nMAX_OPEN_FILES=524288/' /etc/sysconfig/elasticsearch
+sed -i 's/#MAX_LOCKED_MEMORY=unlimited/&amp;\nMAX_LOCKED_MEMORY=unlimited/' /etc/sysconfig/elasticsearch
 </pre>
-
+</div>
 
 <p>
 修改/etc/elasticsearch/elasticsearch.yml配置集群
 </p>
-
-
-<pre class="example">node.name: elasticsearch_hostname
+<pre class="example">
+node.name: elasticsearch_hostname
 cluster.name: elasticsearch_log7
 gateway.recover_after_nodes: 8
 gateway.expected_nodes: 10
@@ -1170,68 +1142,55 @@ gateway.recover_after_time: 5m
 discovery.zen.ping.unicast.hosts: ["host1", "host2:port"]
 </pre>
 
-
 <p>
 <a href="https://www.elastic.co/guide/en/elasticsearch/guide/current/important-configuration-changes.html">https://www.elastic.co/guide/en/elasticsearch/guide/current/important-configuration-changes.html</a>
 </p>
 
 
-
-
+<div class="org-src-container">
 <pre class="src src-sh">service elasticsearch start
 </pre>
+</div>
 
-
-
-<pre class="src src-sh"><span style="color: #b22222;">#</span><span style="color: #b22222;">&#26816;&#26597;max_file_descriptors</span>
+<div class="org-src-container">
+<pre class="src src-sh">#检查max_file_descriptors
 curl localhost:9200/_nodes/stats/process?pretty
-<span style="color: #b22222;">#</span><span style="color: #b22222;">&#26816;&#26597;vm.max_map_count</span>
+#检查vm.max_map_count
 sysctl vm.max_map_count
-<span style="color: #b22222;">#</span><span style="color: #b22222;">&#26816;&#26597;&#26159;&#21542;mlockall</span>
+#检查是否mlockall
 curl http://localhost:9200/_nodes/process?pretty
-<span style="color: #b22222;">#</span><span style="color: #b22222;">&#26816;&#26597;ES_HEAP_SIZE</span>
+#检查ES_HEAP_SIZE
 jmap -heap &lt;pid&gt;
-<span style="color: #b22222;">#</span><span style="color: #b22222;">&#26816;&#26597;&#38598;&#32676;&#29366;&#24577;</span>
+#检查集群状态
 curl -XGET localhost:9200/_cluster/health?pretty
 </pre>
-
-
+</div>
+</div>
 </div>
 
-</div>
-
-<div id="outline-container-6-3" class="outline-3">
-<h3 id="sec-6-3">Kibana</h3>
-<div class="outline-text-3" id="text-6-3">
-
-
-
-
-
+<div id="outline-container-org52a1b8c" class="outline-3">
+<h3 id="org52a1b8c">Kibana</h3>
+<div class="outline-text-3" id="text-org52a1b8c">
+<div class="org-src-container">
 <pre class="src src-sh">rpm -ivh https://download.elastic.co/kibana/kibana/kibana-4.6.0-x86_64.rpm
 service kibana start
 </pre>
-
-
+</div>
+</div>
 </div>
 
-</div>
-
-<div id="outline-container-6-4" class="outline-3">
-<h3 id="sec-6-4">Filebeat</h3>
-<div class="outline-text-3" id="text-6-4">
-
-
-
-
+<div id="outline-container-orgf43bee1" class="outline-3">
+<h3 id="orgf43bee1">Filebeat</h3>
+<div class="outline-text-3" id="text-orgf43bee1">
+<div class="org-src-container">
 <pre class="src src-sh">rpm -ivh https://download.elastic.co/beats/filebeat/filebeat-1.3.0-x86_64.rpm
 mv /etc/filebeat/filebeat.yml /etc/filebeat/filebeat.yml.sample
 vi /etc/filebeat/filebeat.yml
 </pre>
+</div>
 
-
-
-<pre class="example">filebeat:
+<pre class="example">
+filebeat:
 # registry_file用于设置偏移量信息文件的路径，rpm包安装时默认位置在/.filebeat。当需要重新设置读取日志的偏移量时需要先删除该文件
   registry_file: /etc/filebeat/.filebeat
   prospectors:
@@ -1280,78 +1239,57 @@ logging:
     keepfiles: 5
     rotateeverybytes: 10485760
 </pre>
-
-
+</div>
 </div>
 
-</div>
-
-<div id="outline-container-6-5" class="outline-3">
-<h3 id="sec-6-5">Marvel</h3>
-<div class="outline-text-3" id="text-6-5">
-
-
-
-
-<pre class="src src-sh"><span style="color: #b22222;"># </span><span style="color: #b22222;">&#27880;&#24847;&#22914;&#26524;&#26159;es&#38598;&#32676;&#65292;&#27599;&#21488;es&#33410;&#28857;&#19978;&#37117;&#38656;&#35201;&#23433;&#35013;marvel-agent&#25554;&#20214;</span>
+<div id="outline-container-orgd957dcf" class="outline-3">
+<h3 id="orgd957dcf">Marvel</h3>
+<div class="outline-text-3" id="text-orgd957dcf">
+<div class="org-src-container">
+<pre class="src src-sh"># 注意如果是es集群，每台es节点上都需要安装marvel-agent插件
 /usr/share/elasticsearch/bin/plugin install license
 /usr/share/elasticsearch/bin/plugin install marvel-agent
 service elasticsearch restart
-<span style="color: #b22222;"># </span><span style="color: #b22222;">echo 'elasticsearch_url: "http://127.0.0.1:9200"' &gt;&gt; /opt/kibana/config/kibana.yml</span>
+# echo 'elasticsearch_url: "http://127.0.0.1:9200"' &gt;&gt; /opt/kibana/config/kibana.yml
 service kibana restart
 </pre>
-
 </div>
-
 </div>
-
-<div id="outline-container-6-6" class="outline-3">
-<h3 id="sec-6-6">Sense</h3>
-<div class="outline-text-3" id="text-6-6">
-
-
-
-
+</div>
+<div id="outline-container-org5f9fd15" class="outline-3">
+<h3 id="org5f9fd15">Sense</h3>
+<div class="outline-text-3" id="text-org5f9fd15">
+<div class="org-src-container">
 <pre class="src src-sh">/opt/kibana/bin/kibana plugin --install elastic/sense/latest
 service kibana restart
 </pre>
-
-
+</div>
+</div>
 </div>
 </div>
 
-</div>
-
-<div id="outline-container-7" class="outline-2">
-<h2 id="sec-7">ELK5生产系统部署</h2>
-<div class="outline-text-2" id="text-7">
-
-
+<div id="outline-container-org4b618f0" class="outline-2">
+<h2 id="org4b618f0">ELK5生产系统部署</h2>
+<div class="outline-text-2" id="text-org4b618f0">
 <p>
 ELK5系统需要安装java1.8
 </p>
-
 </div>
 
-<div id="outline-container-7-1" class="outline-3">
-<h3 id="sec-7-1">Filebeat</h3>
-<div class="outline-text-3" id="text-7-1">
-
-
-
-
-
+<div id="outline-container-org583b364" class="outline-3">
+<h3 id="org583b364">Filebeat</h3>
+<div class="outline-text-3" id="text-org583b364">
+<div class="org-src-container">
 <pre class="src src-sh">rpm -ivh https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.0.1-x86_64.rpm
 mv /etc/filebeat/filebeat.yml /etc/filebeat/filebeat.yml.sample
 vi /etc/filebeat/filebeat.yml
 </pre>
-
+</div>
 <p>
 例1：
 </p>
-
-
-<pre class="example">filebeat:
+<pre class="example">
+filebeat:
 # registry_file用于设置偏移量信息文件的路径，rpm包安装时默认位置在/.filebeat。当需要重新设置读取日志的偏移量时需要先删除该文件
   registry_file: /etc/filebeat/.filebeat
   prospectors:
@@ -1403,13 +1341,11 @@ logging:
     rotateeverybytes: 10485760
 </pre>
 
-
 <p>
 例2：
 </p>
-
-
-<pre class="example">filebeat:
+<pre class="example">
+filebeat:
   registry_file: /etc/filebeat/.filebeat
   prospectors:
     - input_type: log
@@ -1587,50 +1523,38 @@ logging:
     keepfiles: 5
     rotateeverybytes: 10485760
 </pre>
-
 </div>
-
 </div>
-
-<div id="outline-container-7-2" class="outline-3">
-<h3 id="sec-7-2">Logstash</h3>
-<div class="outline-text-3" id="text-7-2">
-
-
+<div id="outline-container-orgc7ab4c5" class="outline-3">
+<h3 id="orgc7ab4c5">Logstash</h3>
+<div class="outline-text-3" id="text-orgc7ab4c5">
 </div>
-
-<div id="outline-container-7-2-1" class="outline-4">
-<h4 id="sec-7-2-1">centos6上安装logstash5</h4>
-<div class="outline-text-4" id="text-7-2-1">
-
-
-
-
+<div id="outline-container-orgf5813fa" class="outline-4">
+<h4 id="orgf5813fa">centos6上安装logstash5</h4>
+<div class="outline-text-4" id="text-orgf5813fa">
+<div class="org-src-container">
 <pre class="src src-sh">rpm -ivh https://artifacts.elastic.co/downloads/logstash/logstash-5.0.0.rpm
-<span style="color: #b22222;"># </span><span style="color: #b22222;">&#22914;&#38656;&#35201;&#20462;&#25913;&#21551;&#21160;&#33050;&#26412;&#65292;&#20808;&#20462;&#25913;&#21551;&#21160;&#33050;&#26412;&#30340;&#37197;&#32622;startup.options&#65292;&#28982;&#21518;&#25191;&#34892;&#29983;&#25104;&#21551;&#21160;&#33050;&#26412;/usr/share/logstash/bin/system-install</span>
+# 如需要修改启动脚本，先修改启动脚本的配置startup.options，然后执行生成启动脚本/usr/share/logstash/bin/system-install
 cp /etc/logstash/logstash.yml /etc/logstash/logstash.yml.sample
 </pre>
-
+</div>
 
 <p>
 vi /etc/logstash/logstash.yml
 </p>
-
-
-<pre class="example">path.data: /var/lib/logstash
+<pre class="example">
+path.data: /var/lib/logstash
 path.config: /etc/logstash/conf.d
 path.logs: /var/log/logstash
 pipeline.batch.size: 10000
 pipeline.workers: 10
 </pre>
 
-
 <p>
 vi /etc/logstash/conf.d/pipeline.conf
 </p>
-
-
-<pre class="example">input {
+<pre class="example">
+input {
     redis {
         host =&gt;  "117.169.14.151"
         port =&gt; 6397
@@ -1648,218 +1572,258 @@ output {
 }
 </pre>
 
-
 <p>
 启动logstash：
 </p>
-
-
+<div class="org-src-container">
 <pre class="src src-sh">initctl start logstash
 </pre>
-
+</div>
 
 <p>
 需要注意的是rmp包安装的logstash的/etc/logstash/conf.d/目录下的文件不管是什么文件名的文件都会被看成是logstash的配置文件。所以这个文件加下不能存放logstash配置文件的备份或者template文件。
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-7-2-2" class="outline-4">
-<h4 id="sec-7-2-2">centos5上安装logstash</h4>
-<div class="outline-text-4" id="text-7-2-2">
-
-
-
-
+<div id="outline-container-orgbaa0d02" class="outline-4">
+<h4 id="orgbaa0d02">centos5上安装logstash</h4>
+<div class="outline-text-4" id="text-orgbaa0d02">
+<div class="org-src-container">
 <pre class="src src-sh">wget -N https://artifacts.elastic.co/downloads/logstash/logstash-5.2.1.rpm
 rpm --nosignature -ivh logstash-5.2.1.rpm
 rm -f logstash-5.2.1.rpm
 </pre>
+</div>
 
-
-
-<pre class="src src-sh">sed -i <span style="color: #8b2252;">'s/.*chroot.*/#&amp;/'</span> /etc/init.d/logstash
-sed -i <span style="color: #8b2252;">'s/.*nice -n.*/#&amp;/'</span> /etc/init.d/logstash
-sed -i <span style="color: #8b2252;">'s/.*chroot.*sh -c "/&amp;\n  nice -n "$nice" sh -c "/'</span> /etc/init.d/logstash
+<div class="org-src-container">
+<pre class="src src-sh">sed -i 's/.*chroot.*/#&amp;/' /etc/init.d/logstash
+sed -i 's/.*nice -n.*/#&amp;/' /etc/init.d/logstash
+sed -i 's/.*chroot.*sh -c "/&amp;\n  nice -n "$nice" sh -c "/' /etc/init.d/logstash
 </pre>
-
+</div>
 
 <p>
 添加logstash自启动：
 </p>
-
-
+<div class="org-src-container">
 <pre class="src src-sh">chkconfig --add logstash
 </pre>
-
+</div>
 
 <p>
 启动logstash：
 </p>
-
-
+<div class="org-src-container">
 <pre class="src src-sh">service logstash start
 </pre>
-
+</div>
 
 <p>
 卸载logstash
 </p>
-
-
+<div class="org-src-container">
 <pre class="src src-sh">rpm --nosignature -e logstash
 </pre>
-
-
+</div>
+</div>
 </div>
 </div>
 
-</div>
-
-<div id="outline-container-7-3" class="outline-3">
-<h3 id="sec-7-3">Elasticsearch</h3>
-<div class="outline-text-3" id="text-7-3">
-
-<p>需要java8以上支持才可以运行
+<div id="outline-container-orgeb4fcaf" class="outline-3">
+<h3 id="orgeb4fcaf">Elasticsearch</h3>
+<div class="outline-text-3" id="text-orgeb4fcaf">
+<p>
+需要java8以上支持才可以运行
 </p>
-
-
+<div class="org-src-container">
 <pre class="src src-sh">rpm -ivh https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.0.0.rpm
 mv /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.sample
 </pre>
-
+</div>
 
 <p>
 vi /etc/elasticsearch/elasticsearch.yml设置启动参数
 </p>
-
-
-<pre class="example">network.host: [_local_, _global_]
+<pre class="example">
+network.host: [_local_, _global_]
 bootstrap.memory_lock: true
 thread_pool.search.queue_size: 10000
 </pre>
 
-
 <p>
 可以通过修改/etc/sysconfig/elasticsearch，/etc/elasticsearch/jvm.options和/etc/security/limits.conf，调整启动参数。
 </p>
-
-
-<pre class="src src-sh">sed -i <span style="color: #8b2252;">'s/Xms2g/Xms5g/'</span> /etc/elasticsearch/jvm.options
-sed -i <span style="color: #8b2252;">'s/Xmx2g/Xmx5g/'</span> /etc/elasticsearch/jvm.options
-sed -i <span style="color: #8b2252;">'s/#MAX_OPEN_FILES=65536/&amp;\nMAX_OPEN_FILES=524288/'</span> /etc/sysconfig/elasticsearch
-sed -i <span style="color: #8b2252;">'s/#MAX_LOCKED_MEMORY=unlimited/&amp;\nMAX_LOCKED_MEMORY=unlimited/'</span> /etc/sysconfig/elasticsearch
-<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">'elasticsearch  -  nproc  127447'</span> &gt;&gt; /etc/security/limits.conf
+<div class="org-src-container">
+<pre class="src src-sh">sed -i 's/Xms2g/Xms5g/' /etc/elasticsearch/jvm.options
+sed -i 's/Xmx2g/Xmx5g/' /etc/elasticsearch/jvm.options
+sed -i 's/#MAX_OPEN_FILES=65536/&amp;\nMAX_OPEN_FILES=524288/' /etc/sysconfig/elasticsearch
+sed -i 's/#MAX_LOCKED_MEMORY=unlimited/&amp;\nMAX_LOCKED_MEMORY=unlimited/' /etc/sysconfig/elasticsearch
+echo 'elasticsearch  -  nproc  127447' &gt;&gt; /etc/security/limits.conf
 </pre>
+</div>
 
-
-
+<div class="org-src-container">
 <pre class="src src-sh">chkconfig --add elasticsearch
 service elasticsearch start
 </pre>
-
-
+</div>
+</div>
 </div>
 
-</div>
-
-<div id="outline-container-7-4" class="outline-3">
-<h3 id="sec-7-4">Kibana</h3>
-<div class="outline-text-3" id="text-7-4">
-
-
-
-
-
+<div id="outline-container-org5d8d7ef" class="outline-3">
+<h3 id="org5d8d7ef">Kibana</h3>
+<div class="outline-text-3" id="text-org5d8d7ef">
+<div class="org-src-container">
 <pre class="src src-sh">rpm -ivh https://artifacts.elastic.co/downloads/kibana/kibana-5.0.0-x86_64.rpm
 cp /etc/kibana/kibana.yml /etc/kibana/kibana.yml.sample
-<span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">'server.host: "0.0.0.0"'</span> &gt; /etc/kibana/kibana.yml
+echo 'server.host: "0.0.0.0"' &gt; /etc/kibana/kibana.yml
 service kibana start
 </pre>
-
-
+</div>
+</div>
 </div>
 </div>
 
+<div id="outline-container-orge00aed3" class="outline-2">
+<h2 id="orge00aed3">ELK维护</h2>
+<div class="outline-text-2" id="text-orge00aed3">
 </div>
-
-<div id="outline-container-8" class="outline-2">
-<h2 id="sec-8">ELK维护</h2>
-<div class="outline-text-2" id="text-8">
-
-
-</div>
-
-<div id="outline-container-8-1" class="outline-3">
-<h3 id="sec-8-1">清理ES数据</h3>
-<div class="outline-text-3" id="text-8-1">
-
-<p>crontab中加入如下语句，可清理7天前的通过logstash存储进来的es数据：
+<div id="outline-container-orgf34d33a" class="outline-3">
+<h3 id="orgf34d33a">清理ES数据</h3>
+<div class="outline-text-3" id="text-orgf34d33a">
+<p>
+crontab中加入如下语句，可清理7天前的通过logstash存储进来的es数据：
 </p>
-
-
-<pre class="src src-sh">0 23 * * * /usr/bin/curl -XDELETE <span style="color: #8b2252;">"http://localhost:9201/logstash-`date -d '7 days ago' +\%Y.\%m.\%d`?pretty"</span>
+<div class="org-src-container">
+<pre class="src src-sh">0 23 * * * /usr/bin/curl -XDELETE "http://localhost:9201/logstash-`date -d '7 days ago' +\%Y.\%m.\%d`?pretty"
 </pre>
-
 </div>
 </div>
-
 </div>
-
-<div id="outline-container-9" class="outline-2">
-<h2 id="sec-9">单台log7行情每半小时记录数量</h2>
-<div class="outline-text-2" id="text-9">
-
-
+</div>
+<div id="outline-container-org67cec3e" class="outline-2">
+<h2 id="org67cec3e">单台log7行情每半小时记录数量</h2>
+<div class="outline-text-2" id="text-org67cec3e">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
-<colgroup><col class="right" /><col class="right" />
+
+
+<colgroup>
+<col  class="org-right" />
+
+<col  class="org-right" />
 </colgroup>
 <thead>
-<tr><th scope="col" class="right">时间</th><th scope="col" class="right">事件量（条）</th></tr>
+<tr>
+<th scope="col" class="org-right">时间</th>
+<th scope="col" class="org-right">事件量（条）</th>
+</tr>
 </thead>
 <tbody>
-<tr><td class="right">08:30-09:00</td><td class="right">313489</td></tr>
-<tr><td class="right">09:00-09:30</td><td class="right">4076180</td></tr>
-<tr><td class="right">09:30-10:00</td><td class="right">7120617</td></tr>
-<tr><td class="right">10:00-10:30</td><td class="right">5765187</td></tr>
-<tr><td class="right">10:30-11:00</td><td class="right">5301061</td></tr>
-<tr><td class="right">11:00-11:30</td><td class="right">4831571</td></tr>
-<tr><td class="right">11:30-12:00</td><td class="right">1733656</td></tr>
-<tr><td class="right">12:00-12:30</td><td class="right">586172</td></tr>
-<tr><td class="right">12:30-13:00</td><td class="right">634925</td></tr>
-<tr><td class="right">13:00-13:30</td><td class="right">4676149</td></tr>
-<tr><td class="right">13:30-14:00</td><td class="right">5085640</td></tr>
-<tr><td class="right">14:00-14:30</td><td class="right">4969295</td></tr>
-<tr><td class="right">14:30-15:00</td><td class="right">5351350</td></tr>
-<tr><td class="right">15:00-15:30</td><td class="right">2143713</td></tr>
-<tr><td class="right">15:30-16:00</td><td class="right">2162485</td></tr>
-<tr><td class="right">16:00-16:30</td><td class="right">225121</td></tr>
+<tr>
+<td class="org-right">08:30-09:00</td>
+<td class="org-right">313489</td>
+</tr>
+
+<tr>
+<td class="org-right">09:00-09:30</td>
+<td class="org-right">4076180</td>
+</tr>
+
+<tr>
+<td class="org-right">09:30-10:00</td>
+<td class="org-right">7120617</td>
+</tr>
+
+<tr>
+<td class="org-right">10:00-10:30</td>
+<td class="org-right">5765187</td>
+</tr>
+
+<tr>
+<td class="org-right">10:30-11:00</td>
+<td class="org-right">5301061</td>
+</tr>
+
+<tr>
+<td class="org-right">11:00-11:30</td>
+<td class="org-right">4831571</td>
+</tr>
+
+<tr>
+<td class="org-right">11:30-12:00</td>
+<td class="org-right">1733656</td>
+</tr>
+
+<tr>
+<td class="org-right">12:00-12:30</td>
+<td class="org-right">586172</td>
+</tr>
+
+<tr>
+<td class="org-right">12:30-13:00</td>
+<td class="org-right">634925</td>
+</tr>
+
+<tr>
+<td class="org-right">13:00-13:30</td>
+<td class="org-right">4676149</td>
+</tr>
+
+<tr>
+<td class="org-right">13:30-14:00</td>
+<td class="org-right">5085640</td>
+</tr>
+
+<tr>
+<td class="org-right">14:00-14:30</td>
+<td class="org-right">4969295</td>
+</tr>
+
+<tr>
+<td class="org-right">14:30-15:00</td>
+<td class="org-right">5351350</td>
+</tr>
+
+<tr>
+<td class="org-right">15:00-15:30</td>
+<td class="org-right">2143713</td>
+</tr>
+
+<tr>
+<td class="org-right">15:30-16:00</td>
+<td class="org-right">2162485</td>
+</tr>
+
+<tr>
+<td class="org-right">16:00-16:30</td>
+<td class="org-right">225121</td>
+</tr>
 </tbody>
 </table>
-
 
 
 <p>
 If your use-case is write-heavy, read-rarely, consider adjusting your settings accordingly.  Increase the refresh_interval time period (60s instead of 1s), enable a sane merge-throttling level (something around 2-4mb/s, depending on your I/O) so that segment merges don't make your node suffer, perhaps increase the indexing buffer (defaults to 10% of the heap, may be useful to bump to 20%).
 </p>
+
 <p>
 <a href="http://stackoverflow.com/questions/27388521/elasticsearch-high-indexing-throughput">http://stackoverflow.com/questions/27388521/elasticsearch-high-indexing-throughput</a>
-</p></div>
-
-</div>
-
-<div id="outline-container-10" class="outline-2">
-<h2 id="sec-10">参考</h2>
-<div class="outline-text-2" id="text-10">
-
-<p><a href="https://www.elastic.co">https://www.elastic.co</a><br/>
 </p>
+</div>
+</div>
+<div id="outline-container-org888dc4d" class="outline-2">
+<h2 id="org888dc4d">参考</h2>
+<div class="outline-text-2" id="text-org888dc4d">
+<p>
+<a href="https://www.elastic.co">https://www.elastic.co</a><br />
+</p>
+
 <p>
 <a href="http://elasticsearch.cn/article/110">http://elasticsearch.cn/article/110</a>
-</p></div>
+</p>
 </div>
 </div>
-
+</div>
 </body>
 </html>

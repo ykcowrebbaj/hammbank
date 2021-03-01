@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -243,80 +242,201 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
+1、成功安装kafka集群，并启动kafka集群
 </p>
 
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
-
 <p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
+<img src="./20210125_kafka第一次课.assets/屏幕截图%202021-01-25%20232449.png" alt="屏幕截图%202021-01-25%20232449.png" />
+2、使用kafka自带的脚本创建一个名称为test的topic，topic的分区数为3，副本数为2
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
-</pre>
-</div>
 
-<p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
-</pre>
-</div>
-
-
-<p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
-
-<p>
-发现有如下提示：
-</p>
 <pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
+bin/kafka-topics.sh --create --partitions 3 --replication-factor 2 --topic test --zookeeper node01:2181,node02:2181,node03:2181
 </pre>
-
 
 <p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
+<img src="./20210125_kafka第一次课.assets/屏幕截图%202021-01-25%20233215.png" alt="屏幕截图%202021-01-25%20233215.png" />
+3、使用kafka自带的脚增加topic的分区数到5
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
+
+<pre class="example">
+bin/kafka-topics.sh --alter --partitions 5 --topic test --zookeeper node01:2181,node02:2181,node03:2181
 </pre>
+
+<p>
+<img src="./20210125_kafka第一次课.assets/屏幕截图%202021-01-25%20234141.png" alt="屏幕截图%202021-01-25%20234141.png" />
+4、创建maven工程名称叫做kafka\<sub>operate</sub>
+</p>
+
+<p>
+<img src="./20210125_kafka第一次课.assets/屏幕截图%202021-01-25%20235939.png" alt="屏幕截图%202021-01-25%20235939.png" />
+5、导入相关kafka的jar包
+</p>
+
+<p>
+pom.xml:
+</p>
+
+<pre class="example">
+&lt;dependencies&gt;
+       &lt;dependency&gt;
+           &lt;groupId&gt;org.apache.kafka&lt;/groupId&gt;
+           &lt;artifactId&gt;kafka-clients&lt;/artifactId&gt;
+           &lt;version&gt;2.4.1&lt;/version&gt;
+       &lt;/dependency&gt;
+       &lt;!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka --&gt;
+       &lt;!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka --&gt;
+       &lt;dependency&gt;
+           &lt;groupId&gt;org.apache.kafka&lt;/groupId&gt;
+           &lt;artifactId&gt;kafka_2.11&lt;/artifactId&gt;
+           &lt;version&gt;2.4.1&lt;/version&gt;
+       &lt;/dependency&gt;
+
+   &lt;/dependencies&gt;
+   &lt;build&gt;
+       &lt;plugins&gt;
+           &lt;plugin&gt;
+               &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+               &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+               &lt;version&gt;3.0&lt;/version&gt;
+               &lt;configuration&gt;
+                   &lt;source&gt;1.8&lt;/source&gt;
+                   &lt;target&gt;1.8&lt;/target&gt;
+                   &lt;encoding&gt;UTF-8&lt;/encoding&gt;
+                   &lt;!--    &lt;verbal&gt;true&lt;/verbal&gt;--&gt;
+               &lt;/configuration&gt;
+           &lt;/plugin&gt;
+           &lt;plugin&gt;
+               &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+               &lt;artifactId&gt;maven-shade-plugin&lt;/artifactId&gt;
+               &lt;version&gt;2.4.3&lt;/version&gt;
+               &lt;executions&gt;
+                   &lt;execution&gt;
+                       &lt;phase&gt;package&lt;/phase&gt;
+                       &lt;goals&gt;
+                           &lt;goal&gt;shade&lt;/goal&gt;
+                       &lt;/goals&gt;
+                       &lt;configuration&gt;
+                           &lt;filters&gt;
+                               &lt;filter&gt;
+                                   &lt;artifact&gt;*:*&lt;/artifact&gt;
+                                   &lt;excludes&gt;
+                                       &lt;exclude&gt;META-INF/*.SF&lt;/exclude&gt;
+                                       &lt;exclude&gt;META-INF/*.DSA&lt;/exclude&gt;
+                                       &lt;exclude&gt;META-INF/*.RSA&lt;/exclude&gt;
+                                   &lt;/excludes&gt;
+                               &lt;/filter&gt;
+                           &lt;/filters&gt;
+                           &lt;transformers&gt;
+                               &lt;transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"&gt;
+                                   &lt;mainClass&gt;&lt;/mainClass&gt;
+                               &lt;/transformer&gt;
+                           &lt;/transformers&gt;
+                       &lt;/configuration&gt;
+                   &lt;/execution&gt;
+               &lt;/executions&gt;
+           &lt;/plugin&gt;
+       &lt;/plugins&gt;
+   &lt;/build&gt;
+</pre>
+
+<p>
+<img src="./20210125_kafka第一次课.assets/屏幕截图%202021-01-26%20000113.png" alt="屏幕截图%202021-01-26%20000113.png" />
+6、使用kafka生产者javaAPI进行异步的发送消息到kafka集群当中去，并且需要考虑到如果出现数据发送失败的情况，将失败的数据写入到一个指定目录的指定文件当中去
+</p>
+
+<p>
+src/main/java/MyKafkaProducer.java:
+</p>
+
+<pre class="example">
+import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import java.io.*;
+import java.util.Properties;
+
+public class MyKafkaProducer {
+    public static void main(String[] args) throws InterruptedException, IOException {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "node01:9092,node02:9092,node03:9092");
+        //消息的确认机制
+        props.put("acks", "all");
+        props.put("retries", 0);
+        //缓冲区的大小  //默认32M
+        props.put("buffer.memory", 33554432);
+        //批处理数据的大小，每次写入多少数据到topic   //默认16KB
+        props.put("batch.size", 16384);
+        //可以延长多久发送数据   //默认为0 表示不等待 ，立即发送
+        props.put("linger.ms", 1);
+        //指定数据序列化和反序列化
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        KafkaProducer&lt;String, String&gt; producer = new KafkaProducer&lt;String,String&gt;(props);
+
+        int messagNo = 1;
+
+        while(true){
+
+            ProducerRecord&lt;String, String&gt; producerRecord = new ProducerRecord&lt;&gt;("test", "helloworld"+messagNo);
+            //异步发送
+            producer.send(producerRecord,new DataCallBack(messagNo,"helloworld" + messagNo));
+
+            messagNo ++;
+            Thread.sleep(3000);
+        }
+    }
+}
+
+
+class  DataCallBack implements Callback {
+    private final int key;
+    private final String message;
+
+    public DataCallBack(int key,String message){
+        this.key = key;
+        this.message = message;
+    }
+
+    @Override
+    public void onCompletion(RecordMetadata recordMetadata, Exception exception) {
+        if(exception != null){
+            File file = new File("C:\\my_stuff\\kkb\\作业\\20210125\\fail-log.txt");
+            FileOutputStream fileOutputStream = null;
+            try {
+                fileOutputStream = new FileOutputStream(file,true);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            PrintStream printStream = new PrintStream(fileOutputStream);
+            printStream.println("error: " + "key: " + key + ", message: " + message);
+        }else{
+            System.out.println("没有异常，正常发送数据: " + "key: " + key + ", message: " + message);
+        }
+        if(recordMetadata !=null ){
+            System.out.println("topic:" +recordMetadata.topic() +" | partition: "+recordMetadata.partition() + " | offset:" + recordMetadata.offset());
+            System.out.println("key: " + key + ", message: " + message);
+        }
+    }
+}
+</pre>
+
+<p>
+第1，2条消息由于没开启kafka所在虚拟机导致发送失败，3到11条开启运行了带kafka服务的虚拟机后发送成功，第12到18条消息由于再次关闭kafka所在虚拟机导致再次发送失败：
+</p>
+
+
+<div class="figure">
+<p><img src="./20210125_kafka第一次课.assets/QQ图片20210127004006.png" alt="QQ图片20210127004006.png" />
+</p>
 </div>
-<p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
+
+<div class="figure">
+<p><img src="./20210125_kafka第一次课.assets/屏幕截图%202021-01-27%20003141.png" alt="屏幕截图%202021-01-27%20003141.png" />
 </p>
-
-<p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
-</p>
-
-
-<hr />
+</div>
 </div>
 </body>
 </html>

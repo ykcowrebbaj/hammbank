@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -243,80 +242,71 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
-</p>
-
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
-
-<p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
-</pre>
-</div>
-
-<p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
-</pre>
-</div>
-
-
-<p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
-
-<p>
-发现有如下提示：
-</p>
-<pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
-</pre>
-
-
-<p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
-</pre>
-</div>
-<p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
+1、判断题：RDD的transformation算子中的函数使用到了外部的对象需要序列化，是因为对象需要从driver端发送到executor端
 </p>
 
 <p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
+对。是因为对象需要从driver端发送到远程的executor端。
 </p>
 
+<p>
+2、谈谈spark编程，遇到数据倾斜，如何定位原因？
+</p>
 
-<hr />
+<p>
+1）根据log日志信息定位。尤其可以关注distinct、groupByKey、reduceByKey、aggregateByKey、join、cogroup、repartition等算子，产生的相应的日志。
+</p>
+
+<p>
+2）分析定位法。数据倾斜发生在第几个stage，可以在任务运行的过程中，通过Spark
+Web
+UI界面，观察到每一个stage中运行的task的数据量以及task的运行时间，从而进一步确定是不是task分配的数据不均匀导致了数据倾斜。
+</p>
+
+<p>
+3）若task发生内存溢出（OOM），直接看yarn-client模式下本地log的异常栈，或者是通过YARN查看yarn-cluster模式下的log中的异常栈。一般来说，通过异常栈信息就可以定位到你的代码中哪一行发生了内存溢出。然后在那行代码附近找，一般也会有shuffle类算子，此时很可能就是这个算子导致了数据倾斜。
+</p>
+
+<p>
+4）查看导致数据倾斜的key的数据分布情况。我们可以先对key采样样本数据，然后统计出每个key出现的次数来获取key的数据的分布情况。这主要是为之后选择哪一种技术方案来解决数据倾斜提供依据。
+</p>
+
+<p>
+3、简述spark中的统一（动态）内存管理和静态内存管理的区别？
+</p>
+
+<p>
+1）静态内存管理模块只包含堆内内存(On-heap
+Memory)。统一内存管理模块包括了堆内内存(On-heap
+Memory)和堆外内存(Off-heap Memory)两大区域。
+</p>
+
+<p>
+2）静态内存管理方式早就已经被淘汰，spark新的版本都是直接使用统一内存管理（动态内存管理）。
+</p>
+
+<p>
+3）在 Spark
+最初采用的静态内存管理机制下，存储内存、执行内存和其他内存的大小在 Spark
+应用程序运行期间均为固定的，用户需要在应用程序启动前进行配置。而在目前的统一内存管理中，
+Execution 内存和 Storage 内存可以互相共享的。也就是说，如果 Execution
+内存不足，而 Storage 内存有空闲，那么 Execution 可以从 Storage
+中申请空间；反之亦然。
+</p>
+
+<p>
+4、判断题：spark中，最开始的未经优化的HashShuffleManager，假设map
+task有M个，reduce
+task个数有R个，那么，每个reduce的buffer需要从M*R个磁盘小文件拉取数据
+</p>
+
+<p>
+错。最开始的未经优化的HashShuffleManager会产生大量的小文件，每个 Map
+Task 为每个 Reduce Task 生成一个文件，通常会产生大量的文件（即对应为 M*R
+个中间文件，其中 M 表示 Map Task 个数，R 表示 Reduce Task 个数）
+,也就是说每个reduce的buffer需要从M个磁盘小文件拉取数据。
+</p>
 </div>
 </body>
 </html>

@@ -6,7 +6,7 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>使用mailx和openssl发送邮件</title>
 <meta name="generator" content="Org mode" />
 <meta name="author" content="朱捷文" />
 <style type="text/css">
@@ -243,80 +243,234 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
-<p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
+<h1 class="title">使用mailx和openssl发送邮件</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org000eb09">使用mailx发送邮件</a></li>
+<li><a href="#orgec8b65e">使用openssl发送加密邮件</a></li>
+<li><a href="#org68e1ced">关于阿里云主机绕过外连25端口被屏蔽的方法</a></li>
+<li><a href="#orgd06bd4a">参考</a></li>
 </ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
-</p>
-
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
-
-<p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
-</p>
+</div>
+</div>
+<div id="outline-container-org000eb09" class="outline-2">
+<h2 id="org000eb09">使用mailx发送邮件</h2>
+<div class="outline-text-2" id="text-org000eb09">
 <div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
+<pre class="src src-shell">mailx -s "Test email" test@example.com &lt;&lt;&lt; 'Here is the message body.'
 </pre>
 </div>
 
 <p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
+使用sendmail发送指定from name的邮件：
 </p>
 <div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
+<pre class="src src-shell">mailx -s "Test email" test@example.com -- -f "fromname" &lt;&lt;&lt; 'Here is the message body.'
 </pre>
 </div>
-
-
 <p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
+注意，其中的-f为传递给sendmail的参数。CentOS7上更好的方法是使用mailx的-r参数。
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
 
 <p>
-发现有如下提示：
+mailx配置remote smtp作为MTA，在mailx的配置文件/etc/mail.rc最后增加：
 </p>
 <pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
+set from=account@example.com
+set smtp=111.111.111.111
+set smtp-auth-user=account@example.com
+set smtp-auth-password=123456
+set smtp-auth=login
 </pre>
-
-
 <p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
+set smtp除了ip也可以是A记录域名，由于是A记录也可以通过/etc/hosts来绑定域名ip。
 </p>
+</div>
+</div>
+<div id="outline-container-orgec8b65e" class="outline-2">
+<h2 id="orgec8b65e">使用openssl发送加密邮件</h2>
+<div class="outline-text-2" id="text-orgec8b65e">
 <div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
+<pre class="src src-sh">openssl s_client -connect mail.gw.com.cn:465 -crlf -quiet
 </pre>
 </div>
+<ul class="org-ul">
+<li>openssl用于以ssl方式登录发送邮件，默认端口465。</li>
+<li>-crlf把LF转换为CR+LF，某些SMTP服务实现必须以CR+LF作为行标识符，才可以识别SMTP命令。</li>
+<li>-quiet用来禁止打印会话和证书信息，而且-quiet蕴涵了-ign_eof。如果不加-quiet或-ign_eof参数，openssl会把以B，R，Q为起始符的行作为命令来看待。下面是openssl s_client的manpage：</li>
+</ul>
+<pre class="example">
+CONNECTED COMMANDS
+       If a connection is established with an SSL server then any data received from the server is displayed and any key presses will be sent to the server. When used interactively (which means neither -quiet nor -ign_eof have been given), the session will be renegotiated if the line begins with an R, and if the line begins with a Q or if end of file is reached, the connection will be closed down.
+</pre>
 <p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
+&#x2026;
+220 mail.mycorp.com ESMTP EMOS V1.6 (Postfix)
+</p>
+<pre class="example">
+helo localhost
+</pre>
+<p>
+250 mail.mycorp.com
+</p>
+<pre class="example">
+auth login
+</pre>
+<p>
+334 VXNlcm5hbWU6
+</p>
+<pre class="example">
+VXNlcm5hbWU6即base64的Username:（echo -n 'VXNlcm5hbWU6'|base64 -d）
+填邮箱名，需要用echo -n 'xxxxxx@xxx.xxx.xxx'|base64转换
+</pre>
+<p>
+334 UGFzc3dvcmQ6
+</p>
+<pre class="example">
+UGFzc3dvcmQ6即base64的Password:（echo -n 'UGFzc3dvcmQ6'|base64 -d）
+填用邮箱密码，需要用echo -n 'password'|base64转换
+</pre>
+<p>
+235 2.7.0 Authentication successful
+</p>
+<pre class="example">
+mail from:&lt;xxxxxx@xxx.xxx&gt;
+</pre>
+<p>
+250 2.1.0 Ok
+</p>
+<pre class="example">
+rcpt to:&lt;xxxxxx@xxx.xxx&gt;
+</pre>
+<p>
+250 2.1.5 Ok
+</p>
+<pre class="example">
+data
+</pre>
+<p>
+354 End data with &lt;CR&gt;&lt;LF&gt;.&lt;CR&gt;&lt;LF&gt;
+</p>
+<pre class="example">
+From: "Bob Example" &lt;bob@example.org&gt;
+To: "Alice Example" &lt;alice@example.com&gt;
+Cc: theboss@example.com
+Date: Tue, 15 January 2008 16:02:43 -0500
+Subject: Test message
+
+Hello Alice.
+This is a test message with 5 header fields and 4 lines in the message body.
+Your friend,
+Bob
+.
+</pre>
+<p>
+250 2.0.0 Ok: queued as DD6D140F8C
+</p>
+<pre class="example">
+quit
+</pre>
+<p>
+221 2.0.0 Bye
 </p>
 
 <p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
+closed
 </p>
 
+<p>
+其中的Cc头字段表示抄送，而Date头字段好像并没有什么用，服务器会自动修改为当前日期。
+</p>
 
-<hr />
+<ul class="org-ul">
+<li>如果需要非交互方式下发送邮件，可以vi mymail.txt</li>
+</ul>
+<pre class="example">
+helo localhost
+auth login
+邮箱名
+邮箱密码
+mail from:&lt;xxxxxx@xxx.xxx&gt;
+rcpt to:&lt;xxxxxx@xxx.xxx&gt;
+data
+From: "Bob Example" &lt;bob@example.org&gt;
+To: "Alice Example" &lt;alice@example.com&gt;
+Cc: theboss@example.com
+Date: Tue, 15 January 2008 16:02:43 -0500
+Subject: Test message
+
+Hello Alice.
+This is a test message with 5 header fields and 4 lines in the message body.
+Your friend,
+Bob
+.
+quit
+</pre>
+<p>
+注意，若&lt;xxxxxx@xxx.xxx&gt;中不包含空格，是可以省去尖括号的。
+最后
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">openssl s_client -connect mail.gw.com.cn:465 -crlf -quiet &lt; mymail.txt
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org68e1ced" class="outline-2">
+<h2 id="org68e1ced">关于阿里云主机绕过外连25端口被屏蔽的方法</h2>
+<div class="outline-text-2" id="text-org68e1ced">
+<p>
+在非阿里云主机上搭建一台smtp，额外开通2525端口：
+vi /etc/postfix/master.cf
+</p>
+<pre class="example">
+smtp      inet  n       -       n       -       -       smtpd
+# custom service-name
+smtp2      inet  n       -       n       -       -       smtpd
+</pre>
+
+<p>
+vi /etc/services
+</p>
+<pre class="example">
+smtp            25/tcp          mail
+smtp            25/udp          mail
+smtp2           2525/tcp          mail2    # custom smtp prot
+smtp2           2525/udp          mail2    # custom smtp prot
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-shell">service postfix reload
+</pre>
+</div>
+
+<p>
+最后修改阿里云主机的mailx配置文件，vi /etc/mail.rc，在末尾加入：
+</p>
+<pre class="example">
+set smtp=111.111.111.111:2525
+</pre>
+
+<p>
+<a href="https://www.cnblogs.com/workdsz/articles/9335030.html">https://www.cnblogs.com/workdsz/articles/9335030.html</a>
+另一种方法是，使用nat端口转发：
+<a href="http://yo.zgserver.com/smtpredirect-2.html">http://yo.zgserver.com/smtpredirect-2.html</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgd06bd4a" class="outline-2">
+<h2 id="orgd06bd4a">参考</h2>
+<div class="outline-text-2" id="text-orgd06bd4a">
+<p>
+<a href="https://tools.ietf.org/html/rfc821">https://tools.ietf.org/html/rfc821</a><br />
+<a href="https://tools.ietf.org/html/rfc5321">https://tools.ietf.org/html/rfc5321</a><br />
+<a href="https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol">https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol</a>
+</p>
+</div>
+</div>
 </div>
 </body>
 </html>

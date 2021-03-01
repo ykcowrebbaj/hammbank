@@ -1,71 +1,205 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-               "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
+<!-- 2021-03-01 周一 23:37 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ansible学习笔记</title>
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<meta name="title" content="ansible学习笔记"/>
-<meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2017-08-27T02:08+0800"/>
-<meta name="author" content="朱捷文"/>
-<meta name="description" content=""/>
-<meta name="keywords" content=""/>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
-  html { font-family: Times, serif; font-size: 12pt; }
-  .title  { text-align: center; }
-  .todo   { color: red; }
-  .done   { color: green; }
-  .tag    { background-color: #add8e6; font-weight:normal }
-  .target { }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
   .timestamp { color: #bebebe; }
   .timestamp-kwd { color: #5f9ea0; }
-  .right  {margin-left:auto; margin-right:0px;  text-align:right;}
-  .left   {margin-left:0px;  margin-right:auto; text-align:left;}
-  .center {margin-left:auto; margin-right:auto; text-align:center;}
-  p.verse { margin-left: 3% }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
   pre {
-	border: 1pt solid #AEBDCC;
-	background-color: #F3F5F7;
-	padding: 5pt;
-	font-family: courier, monospace;
-        font-size: 90%;
-        overflow:auto;
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
   }
-  table { border-collapse: collapse; }
-  td, th { vertical-align: top;  }
-  th.right  { text-align:center;  }
-  th.left   { text-align:center;   }
-  th.center { text-align:center; }
-  td.right  { text-align:right;  }
-  td.left   { text-align:left;   }
-  td.center { text-align:center; }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
   dt { font-weight: bold; }
-  div.figure { padding: 0.5em; }
-  div.figure p { text-align: center; }
-  div.inlinetask {
-    padding:10px;
-    border:2px solid gray;
-    margin:10px;
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
     background: #ffffcc;
   }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
   textarea { overflow-x: auto; }
-  .linenr { font-size:smaller }
-  .code-highlighted {background-color:#ffff00;}
-  .org-info-js_info-navigation { border-style:none; }
-  #org-info-js_console-label { font-size:10px; font-weight:bold;
-                               white-space:nowrap; }
-  .org-info-js_search-highlight {background-color:#ffff00; color:#000000;
-                                 font-weight:bold; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
   /*]]>*/-->
-</style><link rel="stylesheet" type="text/css" href="css/worg.css"/>
+</style>
+<link rel="stylesheet" type="text/css" href="css/worg.css"/>
 <script type="text/javascript">
 /*
 @licstart  The following is the entire license notice for the
 JavaScript code in this tag.
 
-Copyright (C) 2012-2013 Free Software Foundation, Inc.
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
 
 The JavaScript code in this tag is free software: you can
 redistribute it and/or modify it under the terms of the GNU
@@ -106,149 +240,174 @@ for the JavaScript code in this tag.
  }
 /*]]>*///-->
 </script>
-
 </head>
 <body>
-
-<div id="preamble">
-
-</div>
-
 <div id="content">
 <h1 class="title">ansible学习笔记</h1>
-
-
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#sec-1">ansible与saltstack对照表</a></li>
-<li><a href="#sec-2">Control Machine的安装需求</a></li>
-<li><a href="#sec-3">Managed Node的安装需求</a></li>
-<li><a href="#sec-4">使用yum安装Control Machine</a></li>
-<li><a href="#sec-5">其他安装方式</a></li>
-<li><a href="#sec-6">ansible工作目录</a></li>
-<li><a href="#sec-7">Inventory</a></li>
-<li><a href="#sec-8">ad-hoc命令</a></li>
-<li><a href="#sec-9">Playbook</a></li>
-<li><a href="#sec-10">普通用户转root</a></li>
-<li><a href="#sec-11">模块帮助</a></li>
+<li><a href="#orgd6554e8">ansible与saltstack对照表</a></li>
+<li><a href="#orge2ec1d7">Control Machine的安装需求</a></li>
+<li><a href="#orgd53d267">Managed Node的安装需求</a></li>
+<li><a href="#orgbd5c15c">使用yum安装Control Machine</a></li>
+<li><a href="#org763f273">其他安装方式</a></li>
+<li><a href="#org5b885bf">ansible工作目录</a></li>
+<li><a href="#org2cf568b">Inventory</a></li>
+<li><a href="#org996bf04">ad-hoc命令</a></li>
+<li><a href="#org301cd25">Playbook</a></li>
+<li><a href="#org314f114">变量</a>
+<ul>
+<li><a href="#orgc1e44ed">创建变量</a></li>
+<li><a href="#orgaa58c8c">引用变量</a></li>
+<li><a href="#orga56ceac">打印变量</a></li>
+<li><a href="#org31a9969">group_vars和host_vars</a></li>
+<li><a href="#org51a256c">Magic变量</a></li>
+<li><a href="#orgcfb289d">Facts变量</a></li>
+<li><a href="#orge74640b">Connection变量</a></li>
+<li><a href="#org4e60c66">在命令行中传递变量</a></li>
+</ul>
+</li>
+<li><a href="#orgd34fb29">条件</a></li>
+<li><a href="#org4de00bc">循环</a></li>
+<li><a href="#orgc1d96ad">条件和循环同时存在</a></li>
+<li><a href="#org100c0de">普通用户转root</a></li>
+<li><a href="#orgab99d03">模块帮助</a></li>
+<li><a href="#org6843705">示例</a>
+<ul>
+<li><a href="#org11448dc">备份和恢复ifcfg-eth0文件</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
-
-<div id="outline-container-1" class="outline-2">
-<h2 id="sec-1">ansible与saltstack对照表</h2>
-<div class="outline-text-2" id="text-1">
-
-
+<div id="outline-container-orgd6554e8" class="outline-2">
+<h2 id="orgd6554e8">ansible与saltstack对照表</h2>
+<div class="outline-text-2" id="text-orgd6554e8">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
-<colgroup><col class="left" /><col class="left" />
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
 </colgroup>
 <thead>
-<tr><th scope="col" class="left">ansible</th><th scope="col" class="left">saltstack</th></tr>
+<tr>
+<th scope="col" class="org-left">ansible</th>
+<th scope="col" class="org-left">saltstack</th>
+</tr>
 </thead>
 <tbody>
-<tr><td class="left">Control Machine</td><td class="left">master</td></tr>
-<tr><td class="left">Managed Node</td><td class="left">minion</td></tr>
-<tr><td class="left">state</td><td class="left">playbook</td></tr>
+<tr>
+<td class="org-left">Control Machine</td>
+<td class="org-left">master</td>
+</tr>
+
+<tr>
+<td class="org-left">Managed Node</td>
+<td class="org-left">minion</td>
+</tr>
+
+<tr>
+<td class="org-left">state</td>
+<td class="org-left">playbook</td>
+</tr>
+
+<tr>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+</tr>
 </tbody>
 </table>
-
-
+</div>
 </div>
 
-</div>
-
-<div id="outline-container-2" class="outline-2">
-<h2 id="sec-2">Control Machine的安装需求</h2>
-<div class="outline-text-2" id="text-2">
-
-<p>Pythone2.6或2.7（windows主机不能作为Control Machine使用）
+<div id="outline-container-orge2ec1d7" class="outline-2">
+<h2 id="orge2ec1d7">Control Machine的安装需求</h2>
+<div class="outline-text-2" id="text-orge2ec1d7">
+<p>
+Pythone2.6或2.7（windows主机不能作为Control Machine使用）
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-3" class="outline-2">
-<h2 id="sec-3">Managed Node的安装需求</h2>
-<div class="outline-text-2" id="text-3">
-
-<p>Python2.4之后的版本，但如版本号小于Python2.5需要另额外安装python-simplejson
+<div id="outline-container-orgd53d267" class="outline-2">
+<h2 id="orgd53d267">Managed Node的安装需求</h2>
+<div class="outline-text-2" id="text-orgd53d267">
+<p>
+Python2.4之后的版本，但如版本号小于Python2.5需要另额外安装python-simplejson
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-4" class="outline-2">
-<h2 id="sec-4">使用yum安装Control Machine</h2>
-<div class="outline-text-2" id="text-4">
-
-<p>首先，需要安装与当前CentOS版本对应的EPEL包：
+<div id="outline-container-orgbd5c15c" class="outline-2">
+<h2 id="orgbd5c15c">使用yum安装Control Machine</h2>
+<div class="outline-text-2" id="text-orgbd5c15c">
+<p>
+首先，需要安装与当前CentOS版本对应的EPEL包：
 <a href="http://fedoraproject.org/wiki/EPEL">http://fedoraproject.org/wiki/EPEL</a>
 </p>
 
-
-
+<div class="org-src-container">
 <pre class="src src-sh">sudo yum install ansible
 </pre>
-
+</div>
 
 <p>
 另外，如果CentOS安装时选择了最小化安装选项，则需要另外安装ssh客户端和非交互SSH的密码验证工具sshpass:
 </p>
 
-
-
-<pre class="src src-sh"><span class="linenr">1:  </span>yum install openssh-clients sshpass
+<div class="org-src-container">
+<pre class="src src-sh"><span class="linenr">1: </span>yum install openssh-clients sshpass
 </pre>
-
-
+</div>
+</div>
 </div>
 
-</div>
-
-<div id="outline-container-5" class="outline-2">
-<h2 id="sec-5">其他安装方式</h2>
-<div class="outline-text-2" id="text-5">
-
-<p><a href="http://docs.ansible.com/intro_installation.html">http://docs.ansible.com/intro_installation.html</a>
+<div id="outline-container-org763f273" class="outline-2">
+<h2 id="org763f273">其他安装方式</h2>
+<div class="outline-text-2" id="text-org763f273">
+<p>
+<a href="http://docs.ansible.com/intro_installation.html">http://docs.ansible.com/intro_installation.html</a>
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-6" class="outline-2">
-<h2 id="sec-6">ansible工作目录</h2>
-<div class="outline-text-2" id="text-6">
-
-<p>对于CentOs系统，使用yum安装完ansible后，几个重要的配置文件会被存放在/etc/ansible/目录中，其中包括：
+<div id="outline-container-org5b885bf" class="outline-2">
+<h2 id="org5b885bf">ansible工作目录</h2>
+<div class="outline-text-2" id="text-org5b885bf">
+<p>
+对于CentOs系统，使用yum安装完ansible后，几个重要的配置文件会被存放在/etc/ansible/目录中，其中包括：
 </p>
+
 <p>
 ansible.cfg：用于设置ansible运行时的环境变量，比如“自定义模块”路径可以通过library=来设置等。
 </p>
+
 <p>
 hosts：是一个被称为inventory的文件，并且它是ansible默认的inventory文件，该文件的路径和名称可以通过ansible.cfg中的inventory=来修改。inventory文件格式使用的是类似于windows的INI文件格式，更多关于inventory的介绍请见下一节。
 </p>
+
 <p>
 roles：默认的角色文件夹位置，随后章节中说明。
 </p>
+
 <p>
 另外，为了方便备份和管理，个人建议把自定义的inventory，playbook，roles，模块，也都放在/etc/ansible/目录或其子目录下，把/etc/ansible/作为ansible的工作目录。
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-7" class="outline-2">
-<h2 id="sec-7">Inventory</h2>
-<div class="outline-text-2" id="text-7">
-
-<p>最初的配置文件/etc/ansible/hosts中只是一个关于如何写inventory的示例，我们可以先mv hosts hosts.sample，然后看一下它的格式，再写我们自己的hosts配置。下面就是：
+<div id="outline-container-org2cf568b" class="outline-2">
+<h2 id="org2cf568b">Inventory</h2>
+<div class="outline-text-2" id="text-org2cf568b">
+<p>
+最初的配置文件/etc/ansible/hosts中只是一个关于如何写inventory的示例，我们可以先mv hosts hosts.sample，然后看一下它的格式，再写我们自己的hosts配置。下面就是：
 </p>
 
-
-
+<div class="org-src-container">
 <pre class="src src-inventory"># This is the default ansible 'hosts' file.
 #
 # It should live in /etc/ansible/hosts
@@ -293,112 +452,126 @@ db02.intranet.mydomain.net
 
 db-[99:101]-node.example.com
 </pre>
-
-
+</div>
 
 <p>
 其中列出的大多都是Managed Node（被管理节点）的主机名或ip。方括号中的是组名。冒号用于模式，用来指定连续的主机。另外，该示例中没有指出的一点是，如果Managed Node的端口是非22端口，则需要在主机名或ip后面加上“:端口号”来表示，比如：10.25.1.56:99。
 </p>
+
 <p>
 inventory文件不仅仅只有/etc/ansible/hosts文件，/etc/ansible/hosts只是默认的inventory文件。我们可以根据inventory文件的格式，创建自己自定义的以任意文件名命名的inventory文件，使用时只需要在ansible命令或ansible-playbook命令行中用-i选项指定该inventory文件即可（见下文的ad-hoc命令和playbook）。
 </p>
+
+<p>
+inventory参数：
+例如，通过ansible_python_interpreter可以指定不同的python解释器，常用于不同的linux发行版：
+ansible_python_interpreter=/usr/bin/python2.6
+另外，还有很多ssh登录相关的参数，详细见普通用户转root一节。
+</p>
+
 <p>
 关于inventory的更多特性请见：
 <a href="http://docs.ansible.com/intro_inventory.html">http://docs.ansible.com/intro_inventory.html</a>
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-8" class="outline-2">
-<h2 id="sec-8">ad-hoc命令</h2>
-<div class="outline-text-2" id="text-8">
-
-<p>An ad-hoc command is something that you might type in to do something really quick, but don’t want to save for later.
+<div id="outline-container-org996bf04" class="outline-2">
+<h2 id="org996bf04">ad-hoc命令</h2>
+<div class="outline-text-2" id="text-org996bf04">
+<p>
+An ad-hoc command is something that you might type in to do something really quick, but don’t want to save for later.
 上文是官网文档对ad-hoc命令的解释：用来快速完成某些任务，不保存供以后再次使用。具体的常用用法如下：
 </p>
 
-
-
+<div class="org-src-container">
 <pre class="src src-sh">ansible [-i PATH] &lt;host-pattern&gt; [-f NUM] [-m NAME] [-a ARGUMENTS] [-k]
 </pre>
-
+</div>
 
 <p>
 <b>-i PATH</b>: 用于指定inventory文件路径，如果不加此选项则使用的是默认的/etc/ansible/hosts（由/etc/ansible/ansible.cfg配置文件设定）。但实际上PATH也可以是用逗号分隔的主机ip列表。
 </p>
+
 <p>
 <b>host-pattern</b>: 用于选中inventory文件中指定的主机，可以使用all表示选中inventory中所有的主机，也可以用inventory中的某个组名来选中某个主机组。还可以对主机组和主机名做集合运算来选取主机：'set1:set2'表示set1和set2并集；'set1:&amp;set2'交集；'set1:!set2'表示set1-set2，即set1中不包含set2中的元素。（其中set1和set2可以是组名也可以是主机名）
 </p>
+
 <p>
 <b>-f NUM</b>: 其中NUM为整数，用于指定执行时的并发数。
 </p>
+
 <p>
 <b>-m NAME</b>: 用于指定模块名，不加该参数时默认使用command模块。
 </p>
+
 <p>
 <b>-a ARGUMENTS</b>: 为模块参数
 </p>
+
 <p>
 <b>-k</b>: 使用密码认证，而不使用key认证
 </p>
+
 <p>
 示例：
 </p>
+
 <p>
 在/etc/ansible/hosts中列出的所有主机上执行ping模块：
 </p>
-
-
+<div class="org-src-container">
 <pre class="src src-sh">ansible all -m ping
 </pre>
-
+</div>
 
 <p>
 在主机10.180.224.27（指定单台主机时后面的逗号不能省略）上执行shell内部命令ulimit -a：
 </p>
-
-
-<pre class="src src-sh">ansible -i <span style="color: #8b2252;">"10.180.224.27,"</span> all -a <span style="color: #8b2252;">'ulimit -a'</span>
+<div class="org-src-container">
+<pre class="src src-sh">ansible -i "10.180.224.27," all -a 'ulimit -a'
 </pre>
-
+</div>
 
 <p>
 在/etc/ansible/myhosts的cnc主机组上执行date命令：
 </p>
-
-
-<pre class="src src-sh">ansible -i ./myhosts cnc -m shell -a <span style="color: #8b2252;">'/bin/date'</span>
+<div class="org-src-container">
+<pre class="src src-sh">ansible -i ./myhosts cnc -m shell -a '/bin/date'
 </pre>
-
+</div>
 
 <p>
 通过copy模块把本地的/etc/hosts文件复制到远程主机的/tmp/目录下：
 </p>
-
-
-<pre class="src src-sh">ansible all -m copy -a <span style="color: #8b2252;">"src=/etc/hosts dest=/tmp/"</span>
+<div class="org-src-container">
+<pre class="src src-sh">ansible all -m copy -a "src=/etc/hosts dest=/tmp/"
 </pre>
+</div>
 
-
+<p>
+打印变量：
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">ansible -i /tmp/hosts all -m debug -a "msg={{ groups }}"
+</pre>
+</div>
 
 <p>
 <a href="http://docs.ansible.com/intro_adhoc.html">http://docs.ansible.com/intro_adhoc.html</a>
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-9" class="outline-2">
-<h2 id="sec-9">Playbook</h2>
-<div class="outline-text-2" id="text-9">
-
-<p>上面提到的ad-hoc命令适用于只执行一次的任务，但对于日常维护来说，有些任务需要我们不定期的去重复执行，而且各任务间也遵循严格的逻辑顺序（判断或循环），使用ad-hoc命令会很不方便，此时我们就该考虑使用playbook了。
+<div id="outline-container-org301cd25" class="outline-2">
+<h2 id="org301cd25">Playbook</h2>
+<div class="outline-text-2" id="text-org301cd25">
+<p>
+上面提到的ad-hoc命令适用于只执行一次的任务，但对于日常维护来说，有些任务需要我们不定期的去重复执行，而且各任务间也遵循严格的逻辑顺序（判断或循环），使用ad-hoc命令会很不方便，此时我们就该考虑使用playbook了。
 playbook可以看做是一个YAML格式的配置文件，每个playbook由一个或多个play组成，下面是一个palybook：
 </p>
 
-
-
+<div class="org-src-container">
 <pre class="src src-playbook">---
 - hosts: webservers
   vars:
@@ -418,34 +591,40 @@ playbook可以看做是一个YAML格式的配置文件，每个playbook由一个
     - name: restart apache
       service: name=httpd state=restarted
 </pre>
-
+</div>
 
 <p>
 说到playbook配置文件，有必要先简单介绍下ansible中使用到的YAML格式：列表和字典。
 </p>
+
 <p>
 列表：每个列表元素都以字符"- "开头，作为元素间的分隔。
 </p>
+
 <p>
 字典：也叫“关联数组”、“hash”、“映射”、“键值对”。在YAML中使用": "来分隔键与值。
 </p>
+
 <p>
-我们来看一下上面那个示例，该playbook中只包含了一个play，当然如果有必要也可以包含多个play，那么下一个play仍然要以“- hosts: &hellip;”开始，也就是说每个play都是一个组成playbook列表的列表元素。再来看一下play，每一个play都是一个字典，上面示例中的那个play字典包含了host, vars, remote_user, tasks, handlers这几个常用的键，下面分别介绍一下：
+我们来看一下上面那个示例，该playbook中只包含了一个play，当然如果有必要也可以包含多个play，那么下一个play仍然要以“- hosts: &#x2026;”开始，也就是说每个play都是一个组成playbook列表的列表元素。再来看一下play，每一个play都是一个字典，上面示例中的那个play字典包含了host, vars, remote_user, tasks, handlers这几个常用的键，下面分别介绍一下：
 </p>
+
 <p>
 <b>hosts</b>: 值可以是all或组名，类似于ad-hoc命令中的&lt;host-pattern&gt;
 </p>
+
 <p>
 <b>vars</b>: 用来定义变量并为其赋值，在上例中变量http_port被赋值为80，max_clients被赋值为200。可以在随后的playbook或模板文件（如上例中的/srv/httpd.j2）中通过jinja语法来引用
 </p>
+
 <p>
 <b>remote_user</b>: 远程主机上执行task时所用的用户名
 </p>
+
 <p>
-<b>tasks</b>: playbook中最重要的就是tasks，对于每一台远程主机而言，一个play中的tasks是从上到下的顺序执行的，如果执行过程中有任务失败，就会中断后面剩下的任务。我们来分析一下上面例子中的tasks，首先，例子中的name: &hellip;是可以省略的，可以简化成这样：
+<b>tasks</b>: playbook中最重要的就是tasks，对于每一台远程主机而言，一个play中的tasks是从上到下的顺序执行的，如果执行过程中有任务失败，就会中断后面剩下的任务。我们来分析一下上面例子中的tasks，首先，例子中的name: &#x2026;是可以省略的，可以简化成这样：
 </p>
-
-
+<div class="org-src-container">
 <pre class="src src-playbook">tasks:
   - yum: pkg=httpd state=latest
   - template: src=/srv/httpd.j2 dest=/etc/httpd.conf
@@ -453,100 +632,350 @@ playbook可以看做是一个YAML格式的配置文件，每个playbook由一个
     - restart apache
   - service: name=httpd state=started enabled=yes
 </pre>
-
+</div>
 <p>
 其中的yum，template，service都是ansible的模块，与“ad-hoc命令”-m后跟的模块名是相同的东西。而"pkg=httpd state=latest"，"src=/srv/httpd.j2 dest=/etc/httpd.conf"，"name=httpd state=started enabled=yes"都是模块的参数，也就是"ad-hoc命令"的-a选项后所跟的。
 </p>
+
 <p>
-<b>handlers</b>: 它需要与notify结合使用。此处只“定义”handlers被触发时去执行的操作，而对于这些handlers何时会被触发，是通过notify来指定的。也就是说只有当带有notify的tasks执行成功时，才会触发handlers中的操作。用上面例子来看，只有当使用template模块更新了远程主机的/etc/httpd.conf文件后，才会重启apache服务，否则apache不会被重启。注：handlers下的name不能省略，因为notify是通过该name来引用特定的handler的。另外，还有一点非常重要，handlers中的操作是play中最后执行的，而且如果某个play中有多个task带有notify，且这些notify都引用同一个handler，那么只要这些带notify的task中有一个执行成功，就会在该play中的所有task成功执行后，触发这个handler操作。
+<b>handlers</b>: 它需要与notify结合使用。handlers只“定义”了被触发时去执行的操作，而对于这些handlers何时会被触发，是通过notify来指定的。也就是说只有当带有notify的模块返回的执行结果changed为true时，才会触发handlers中的操作。用上面例子来看，只有当src与dest所指定的文件内容不同时，template模块才会更新远程主机的/etc/httpd.conf文件，并返回changed为true，才会触发apache服务重启，否则返回changed为false且apache不会被重启。在测试过程中也可以强制设置changed_when: true。handlers下的name不能省略，因为notify是通过该name来引用特定的handler的。另外，还有一点非常重要，handlers中的操作是play中最后执行的，而且如果某个play中有多个task带有notify，且这些notify都引用同一个handler，那么只要这些带notify的task中有一个执行成功，就会在该play中的所有task成功执行后，触发这个handler操作。
 </p>
+
 <p>
 执行playbook：
 </p>
-
-
+<div class="org-src-container">
 <pre class="src src-playbook">ansible-playbook [-i PATH] [-l SUBSET] playbook.yml
 </pre>
-
+</div>
 
 <p>
 <b>-i PATH</b>: 用于指定inventory文件路径。
 </p>
+
 <p>
 <b>-l SUBSET</b>: 用于指定主机或组。
 </p>
+
 <p>
 playbook的官方示例：
 <a href="https://github.com/ansible/ansible-examples">https://github.com/ansible/ansible-examples</a>
 </p>
-
+</div>
 </div>
 
+<div id="outline-container-org314f114" class="outline-2">
+<h2 id="org314f114">变量</h2>
+<div class="outline-text-2" id="text-org314f114">
 </div>
-
-<div id="outline-container-10" class="outline-2">
-<h2 id="sec-10">普通用户转root</h2>
-<div class="outline-text-2" id="text-10">
-
-<p>ad-hoc
-</p>
-
-
-<pre class="src src-sh">ansible -i <span style="color: #8b2252;">"10.180.224.27,"</span> all -a <span style="color: #8b2252;">"whoami"</span> -u zhujw -k -b --become-method=su -K
+<div id="outline-container-orgc1e44ed" class="outline-3">
+<h3 id="orgc1e44ed">创建变量</h3>
+<div class="outline-text-3" id="text-orgc1e44ed">
+<pre class="example">
+foo:
+  field1: one
+  field2: two
 </pre>
+<p>
+变量名中不允许有" ", ".", "-"，但允许下划线"_"
+</p>
+</div>
+</div>
+<div id="outline-container-orgaa58c8c" class="outline-3">
+<h3 id="orgaa58c8c">引用变量</h3>
+<div class="outline-text-3" id="text-orgaa58c8c">
+<pre class="example">
+foo['field1']
+foo.field1
+</pre>
+<p>
+注意，使用"."来引用字典变量的key值时，可能会与python的变量属性和方法冲突。
+另一方面，也就是说ansible中所使用的变量是可以通过python语法调用该变量的属性和运行该变量的方法的。例如：
+</p>
+<pre class="example">
+{{ groups.get(mon_group_name, []) }}
+</pre>
+<p>
+其中的groups为Magic变量，get为python的字典变量的方法
+</p>
+</div>
+</div>
+<div id="outline-container-orga56ceac" class="outline-3">
+<h3 id="orga56ceac">打印变量</h3>
+<div class="outline-text-3" id="text-orga56ceac">
+<p>
+变量的打印使用jinja2的语法：
+</p>
+<pre class="example">
+{{ }}
+</pre>
+</div>
+</div>
+<div id="outline-container-org31a9969" class="outline-3">
+<h3 id="org31a9969">group_vars和host_vars</h3>
+<div class="outline-text-3" id="text-org31a9969">
+<p>
+在文件中存放主机foosball，组raleigh，webservers的变量：
+</p>
+<pre class="example">
+/etc/ansible/group_vars/raleigh # can optionally end in '.yml', '.yaml', or '.json'
+/etc/ansible/group_vars/webservers
+/etc/ansible/host_vars/foosball
+</pre>
+<p>
+另外，也可以存放以某个组或主机命名的目录的文件内：
+</p>
+<pre class="example">
+/etc/ansible/group_vars/raleigh/db_settings
+/etc/ansible/group_vars/raleigh/cluster_settings
+</pre>
+</div>
+</div>
+<div id="outline-container-org51a256c" class="outline-3">
+<h3 id="org51a256c">Magic变量</h3>
+<div class="outline-text-3" id="text-org51a256c">
+<p>
+常用的有groups，hostvars等
+</p>
+</div>
+</div>
+<div id="outline-container-orgcfb289d" class="outline-3">
+<h3 id="orgcfb289d">Facts变量</h3>
+<div class="outline-text-3" id="text-orgcfb289d">
+<p>
+显示某台主机的Facts变量
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">ansible hostname -m setup
+</pre>
+</div>
 
+<p>
+过滤Facts变量的网卡部分：
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">ansible all -m setup -a 'filter=ansible_eth[0-2]'
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orge74640b" class="outline-3">
+<h3 id="orge74640b">Connection变量</h3>
+</div>
+<div id="outline-container-org4e60c66" class="outline-3">
+<h3 id="org4e60c66">在命令行中传递变量</h3>
+<div class="outline-text-3" id="text-org4e60c66">
+<div class="org-src-container">
+<pre class="src src-shell">ansible-playbook release.yml --extra-vars "version=1.23.45 other_variable=foo"
+ansible-playbook release.yml --extra-vars '{"version":"1.23.45","other_variable":"foo"}'
+ansible-playbook arcade.yml --extra-vars '{"pacman":"mrs","ghosts":["inky","pinky","clyde","sue"]}'
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgd34fb29" class="outline-2">
+<h2 id="orgd34fb29">条件</h2>
+<div class="outline-text-2" id="text-orgd34fb29">
+<p>
+或：
+</p>
+<pre class="example">
+tasks:
+  - name: "shut down CentOS 6 and Debian 7 systems"
+    command: /sbin/shutdown -t now
+    when: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "6") or (ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_major_version'] == "7")
+</pre>
+<p>
+与：
+</p>
+<pre class="example">
+tasks:
+  - name: "shut down CentOS 6 systems"
+    command: /sbin/shutdown -t now
+    when:
+      - ansible_facts['distribution'] == "CentOS"
+      - ansible_facts['distribution_major_version'] == "6"
+</pre>
+<p>
+当然也可以使用and链接。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org4de00bc" class="outline-2">
+<h2 id="org4de00bc">循环</h2>
+<div class="outline-text-2" id="text-org4de00bc">
+<p>
+ansible提供两种循环关键字：一种是loop，另一种是loop and with_&lt;lookup&gt;
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc1d96ad" class="outline-2">
+<h2 id="orgc1d96ad">条件和循环同时存在</h2>
+<div class="outline-text-2" id="text-orgc1d96ad">
+<pre class="example">
+tasks:
+    - command: echo {{ item }}
+      loop: [ 0, 2, 4, 6, 8, 10 ]
+      when: item &gt; 5
+</pre>
+<p>
+when在内层，loop在外层
+</p>
+</div>
+</div>
+<div id="outline-container-org100c0de" class="outline-2">
+<h2 id="org100c0de">普通用户转root</h2>
+<div class="outline-text-2" id="text-org100c0de">
+<p>
+ad-hoc
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">ansible -i "10.180.224.27," all -a "whoami" -u zhujw -k -b --become-method=su -K
+</pre>
+</div>
 <p>
 注意，使用 <code>--become-method=</code>, <code>--become-user=</code>, <code>-K</code> , <code>--ask-become-pass</code> 后，需要同时设置-b才能使切换用户真正生效。
 </p>
+
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
-<colgroup><col class="left" /><col class="left" /><col class="left" /><col class="left" />
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
 </colgroup>
 <thead>
-<tr><th scope="col" class="left">ad-hoc</th><th scope="col" class="left">Inventory</th><th scope="col" class="left">Playbook</th><th scope="col" class="left">ansible.cfg</th></tr>
+<tr>
+<th scope="col" class="org-left">ad-hoc</th>
+<th scope="col" class="org-left">Inventory</th>
+<th scope="col" class="org-left">Playbook</th>
+<th scope="col" class="org-left">ansible.cfg</th>
+</tr>
 </thead>
 <tbody>
-<tr><td class="left"></td><td class="left">ansible_ssh_port=</td><td class="left"></td><td class="left">remote_port=</td></tr>
-<tr><td class="left">-u REMOTE_USER, &ndash;user=</td><td class="left">ansible_ssh_user=</td><td class="left">remote_user:</td><td class="left">remote_user=</td></tr>
-<tr><td class="left">-k, &ndash;ask-pass</td><td class="left">ansible_ssh_pass=</td><td class="left"></td><td class="left">ask_pass=</td></tr>
-<tr><td class="left">-b, &ndash;become</td><td class="left">ansible_become=true/yes</td><td class="left">become: true/yes</td><td class="left">become=true/yes</td></tr>
-<tr><td class="left">&ndash;become-method=</td><td class="left">ansible_become_method=</td><td class="left">become_method:</td><td class="left">become_method=</td></tr>
-<tr><td class="left">&ndash;become-user=</td><td class="left">ansible_become_user=</td><td class="left">become_user:</td><td class="left">become_user=</td></tr>
-<tr><td class="left">-K, &ndash;ask-become-pass</td><td class="left">ansible_become_pass=</td><td class="left"></td><td class="left">become_ask_pass=</td></tr>
+<tr>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">ansible_ssh_port=</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">remote_port=</td>
+</tr>
+
+<tr>
+<td class="org-left">-u REMOTE_USER, &#x2013;user=</td>
+<td class="org-left">ansible_ssh_user=</td>
+<td class="org-left">remote_user:</td>
+<td class="org-left">remote_user=</td>
+</tr>
+
+<tr>
+<td class="org-left">-k, &#x2013;ask-pass</td>
+<td class="org-left">ansible_ssh_pass=</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">ask_pass=</td>
+</tr>
+
+<tr>
+<td class="org-left">-b, &#x2013;become</td>
+<td class="org-left">ansible_become=true/yes</td>
+<td class="org-left">become: true/yes</td>
+<td class="org-left">become=true/yes</td>
+</tr>
+
+<tr>
+<td class="org-left">&#x2013;become-method=</td>
+<td class="org-left">ansible_become_method=</td>
+<td class="org-left">become_method:</td>
+<td class="org-left">become_method=</td>
+</tr>
+
+<tr>
+<td class="org-left">&#x2013;become-user=</td>
+<td class="org-left">ansible_become_user=</td>
+<td class="org-left">become_user:</td>
+<td class="org-left">become_user=</td>
+</tr>
+
+<tr>
+<td class="org-left">-K, &#x2013;ask-become-pass</td>
+<td class="org-left">ansible_become_pass=</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">become_ask_pass=</td>
+</tr>
+
+<tr>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+</tr>
 </tbody>
 </table>
-
 
 <p>
 <a href="http://docs.ansible.com/ansible/become.html">http://docs.ansible.com/ansible/become.html</a>
 </p>
 </div>
-
 </div>
 
-<div id="outline-container-11" class="outline-2">
-<h2 id="sec-11">模块帮助</h2>
-<div class="outline-text-2" id="text-11">
-
-<p>列出ansible的所有内部模块
+<div id="outline-container-orgab99d03" class="outline-2">
+<h2 id="orgab99d03">模块帮助</h2>
+<div class="outline-text-2" id="text-orgab99d03">
+<p>
+列出ansible的所有内部模块
 </p>
-
-
+<div class="org-src-container">
 <pre class="src src-sh">ansible-doc -l
 </pre>
-
+</div>
 
 <p>
 特定模块的用法
 </p>
-
-
-<pre class="src src-sh">ansible-doc &#27169;&#22359;&#21517;
+<div class="org-src-container">
+<pre class="src src-sh">ansible-doc 模块名
 </pre>
-
-
 </div>
 </div>
 </div>
 
+<div id="outline-container-org6843705" class="outline-2">
+<h2 id="org6843705">示例</h2>
+<div class="outline-text-2" id="text-org6843705">
+</div>
+<div id="outline-container-org11448dc" class="outline-3">
+<h3 id="org11448dc">备份和恢复ifcfg-eth0文件</h3>
+<div class="outline-text-3" id="text-org11448dc">
+<pre class="example">
+---
+- hosts: all
+  vars:
+  tasks:
+  - name: backup eth0 config
+    shell:
+      cmd: \cp /etc/sysconfig/network-scripts/ifcfg-eth0 /root/ifcfg-eth0.bak
+</pre>
+<pre class="example">
+---
+- hosts: all
+  vars:
+  tasks:
+  - name: restore eth0 config
+    shell:
+      cmd: \cp /root/ifcfg-eth0.bak /etc/sysconfig/network-scripts/ifcfg-eth0
+</pre>
+</div>
+</div>
+</div>
+</div>
 </body>
 </html>

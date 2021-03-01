@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -243,80 +242,247 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
+简答：YARN中有几种调度器？使用FairScheduler自定义队列大概经过几步？
 </p>
 
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
+<p>
+目前YARN总共有三种调度器：
+</p>
+
+<ol class="org-ol">
+<li>先进先出调度器（FIFO）</li>
+<li>容量调度器（Capacity Scheduler）</li>
+<li>公平调度器（Fair Scheduler）</li>
+</ol>
 
 <p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
+使用FairScheduler自定义队列步驟：
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
-</pre>
-</div>
+
+<ol class="org-ol">
+<li>修改yarn-site.xml，插入：</li>
+</ol>
 
 <p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
+vim /kkb/install/hadoop-3.1.4/etc/hadoop/yarn-site.xml
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
-</pre>
-</div>
 
-
-<p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
-
-<p>
-发现有如下提示：
-</p>
 <pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
+&lt;!--  指定我们的任务调度使用fairScheduler调度器  --&gt;
+&lt;property&gt;
+    &lt;name&gt;yarn.resourcemanager.scheduler.class&lt;/name&gt;
+    &lt;value&gt;org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;!--  指定我们的任务调度的配置文件路径  --&gt;
+&lt;property&gt;
+    &lt;name&gt;yarn.scheduler.fair.allocation.file&lt;/name&gt;
+    &lt;value&gt;/kkb/install/hadoop-3.1.4/etc/hadoop/fair-scheduler.xml&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;!-- 是否启用资源抢占，如果启用，那么当该队列资源使用
+yarn.scheduler.fair.preemption.cluster-utilization-threshold 这么多比例的时候，就从其他空闲队列抢占资源
+  --&gt;
+&lt;property&gt;
+    &lt;name&gt;yarn.scheduler.fair.preemption&lt;/name&gt;
+    &lt;value&gt;true&lt;/value&gt;
+&lt;/property&gt;
+&lt;property&gt;
+    &lt;name&gt;yarn.scheduler.fair.preemption.cluster-utilization-threshold&lt;/name&gt;
+    &lt;value&gt;0.8f&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;!-- 设置为true，且没有指定队列名，提交应用到用户名同名的队列；如果设置为false或没设置，默认提交到default队列；如果在allocation文件中指定了队列提交策略，忽略此属性  --&gt;
+&lt;property&gt;
+    &lt;name&gt;yarn.scheduler.fair.user-as-default-queue&lt;/name&gt;
+    &lt;value&gt;true&lt;/value&gt;
+    &lt;description&gt;default is True&lt;/description&gt;
+&lt;/property&gt;
+
+&lt;!-- 是否允许在提交应用时，创建队列；如果设置为true，则允许；如果设置为false，如果要将应用提交的队列，没有在allocation文件中指定，那么则将应用提交到default队列；默认为true，如果队列防止策略在allocation文件定义过，那么忽略此属性  --&gt;
+&lt;property&gt;
+    &lt;name&gt;yarn.scheduler.fair.allow-undeclared-pools&lt;/name&gt;
+    &lt;value&gt;false&lt;/value&gt;
+    &lt;description&gt;default is True&lt;/description&gt;
+&lt;/property&gt;
 </pre>
 
+<ol class="org-ol">
+<li>添加fair-scheduler.xml配置文件：</li>
+</ol>
 
 <p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
+vim /kkb/install/hadoop-3.1.4/etc/hadoop/fair-scheduler.xml
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
+
+<pre class="example">
+&lt;?xml version="1.0"?&gt;
+&lt;allocations&gt;
+    &lt;!-- 每个队列中，app的默认调度策略，默认值是fair --&gt;
+    &lt;defaultQueueSchedulingPolicy&gt;fair&lt;/defaultQueueSchedulingPolicy&gt;
+
+    &lt;user name="hadoop"&gt;
+        &lt;!-- 用户hadoop最多运行的app个数 --&gt;
+        &lt;maxRunningApps&gt;30&lt;/maxRunningApps&gt;
+    &lt;/user&gt;
+    &lt;!-- 如果用户没有设置最多运行的app个数，那么用户默认运行10个 --&gt;
+    &lt;userMaxAppsDefault&gt;10&lt;/userMaxAppsDefault&gt;
+
+    &lt;!-- 定义我们的队列  --&gt;
+    &lt;!-- 
+    weight
+    资源池权重
+
+    aclSubmitApps
+    允许提交任务的用户名和组；
+    格式为：“user1,user2 group1,group2” 或 “ group1,group2” -》如果只有组，那么组名前要加个空格
+    如果提交应用的用户或所属组在队列的ACLs中，或在当前队列的父队列的ACLs中，那么此用户有权限提交应用到此队列
+    下例：
+        xiaoli有权限提交应用到队列a；xiaofan在队列a的父队列dev的acls中，所以xiaofan也有权限提交应用到队列a
+        比如有队列层级root.dev.a；
+        有定义
+        &lt;queue name="dev"&gt;
+            ...
+            &lt;aclSubmitApps&gt;xiaofan&lt;/aclSubmitApps&gt;
+            ...
+            &lt;queue name="a"&gt;
+                ...
+                &lt;aclSubmitApps&gt;xiaoli&lt;/aclSubmitApps&gt;
+            &lt;/queue&gt;
+        &lt;/queue&gt;
+
+    aclAdministerApps
+    允许管理任务的用户名和组；
+    格式同上。
+     --&gt;
+    &lt;queue name="root"&gt;
+        &lt;minResources&gt;512mb,4vcores&lt;/minResources&gt;
+        &lt;maxResources&gt;102400mb,100vcores&lt;/maxResources&gt;
+        &lt;maxRunningApps&gt;100&lt;/maxRunningApps&gt;
+        &lt;weight&gt;1.0&lt;/weight&gt;
+        &lt;schedulingMode&gt;fair&lt;/schedulingMode&gt;
+        &lt;aclSubmitApps&gt; &lt;/aclSubmitApps&gt;
+        &lt;aclAdministerApps&gt; &lt;/aclAdministerApps&gt;
+
+        &lt;queue name="default"&gt;
+            &lt;minResources&gt;512mb,4vcores&lt;/minResources&gt;
+            &lt;maxResources&gt;30720mb,30vcores&lt;/maxResources&gt;
+            &lt;maxRunningApps&gt;100&lt;/maxRunningApps&gt;
+            &lt;schedulingMode&gt;fair&lt;/schedulingMode&gt;
+            &lt;weight&gt;1.0&lt;/weight&gt;
+            &lt;!--  所有的任务如果不指定任务队列，都提交到default队列里面来 --&gt;
+            &lt;aclSubmitApps&gt;*&lt;/aclSubmitApps&gt;
+        &lt;/queue&gt;
+
+        &lt;queue name="hadoop"&gt;
+            &lt;minResources&gt;512mb,4vcores&lt;/minResources&gt;
+            &lt;maxResources&gt;20480mb,20vcores&lt;/maxResources&gt;
+            &lt;maxRunningApps&gt;100&lt;/maxRunningApps&gt;
+            &lt;schedulingMode&gt;fair&lt;/schedulingMode&gt;
+            &lt;weight&gt;2.0&lt;/weight&gt;
+            &lt;aclSubmitApps&gt;hadoop hadoop&lt;/aclSubmitApps&gt;
+            &lt;aclAdministerApps&gt;hadoop hadoop&lt;/aclAdministerApps&gt;
+        &lt;/queue&gt;
+
+        &lt;queue name="develop"&gt;
+            &lt;minResources&gt;512mb,4vcores&lt;/minResources&gt;
+            &lt;maxResources&gt;20480mb,20vcores&lt;/maxResources&gt;
+            &lt;maxRunningApps&gt;100&lt;/maxRunningApps&gt;
+            &lt;schedulingMode&gt;fair&lt;/schedulingMode&gt;
+            &lt;weight&gt;1&lt;/weight&gt;
+            &lt;aclSubmitApps&gt;develop develop&lt;/aclSubmitApps&gt;
+            &lt;aclAdministerApps&gt;develop develop&lt;/aclAdministerApps&gt;
+        &lt;/queue&gt;
+
+        &lt;queue name="test1"&gt;
+            &lt;minResources&gt;512mb,4vcores&lt;/minResources&gt;
+            &lt;maxResources&gt;20480mb,20vcores&lt;/maxResources&gt;
+            &lt;maxRunningApps&gt;100&lt;/maxRunningApps&gt;
+            &lt;schedulingMode&gt;fair&lt;/schedulingMode&gt;
+            &lt;weight&gt;1.5&lt;/weight&gt;
+            &lt;aclSubmitApps&gt;test1,hadoop,develop test1&lt;/aclSubmitApps&gt;
+            &lt;aclAdministerApps&gt;test1 group_businessC,supergroup&lt;/aclAdministerApps&gt;
+        &lt;/queue&gt;
+    &lt;/queue&gt;
+    &lt;!-- 
+        包含一系列的rule元素；这些rule元素用来告诉scheduler调度器，进来的app按照规则提交到哪个队列中
+        有多个rule的话，会从上到下进行匹配；
+        rule可能会带有argument；所有的rule都带有create argument，表示当前rule是否能够创建一个新队列；默认值是true
+        如果rule的create设置为false，且在allocation中没有配置此队列，那么尝试匹配下一个rule
+    --&gt;
+    &lt;queuePlacementPolicy&gt;
+        &lt;!-- app被提交到指定的队列；create为true，则创建；若为false，如果队列不存在，则不创建 --&gt;
+        &lt;rule name="specified" create="false"/&gt;
+        &lt;!-- app被提交到提交此app的用户所属组的组名命名的队列；如果队列不存在，则不创建 --&gt;
+        &lt;rule name="primaryGroup" create="false" /&gt;
+        &lt;!-- 如果上边的rule都没有匹配上，则app提交到queue指定的的队列；如果没有指定queue值，默认值是root.default --&gt;
+        &lt;rule name="default" queue="root.default"/&gt;
+    &lt;/queuePlacementPolicy&gt;
+&lt;/allocations&gt;
 </pre>
+
+<ol class="org-ol">
+<li>配置文件分发</li>
+</ol>
+
+<pre class="example">
+cd /kkb/install/hadoop-3.1.4/etc/hadoop
+scp yarn-site.xml  fair-scheduler.xml node02:$PWD
+scp yarn-site.xml  fair-scheduler.xml node03:$PWD
+</pre>
+
+<ol class="org-ol">
+<li>重启yarn集群</li>
+</ol>
+
+<pre class="example">
+cd /kkb/install/hadoop-3.1.4/
+sbin/stop-yarn.sh
+sbin/start-yarn.sh
+</pre>
+
+<ol class="org-ol">
+<li>java代码中指定队列</li>
+</ol>
+
+<pre class="example">
+public static void main(String[] args) throws Exception {
+
+    Configuration configuration = new Configuration();
+    configuration.set("mapreduce.job.queuename", "hadoop");
+
+    int run = ToolRunner.run(new Configuration(), new GroupMain(), args);
+    System.exit(run);
+}
+</pre>
+
+<ol class="org-ol">
+<li>maven打包编译</li>
+</ol>
+
+<pre class="example">
+mvn clean package
+</pre>
+
+<ol class="org-ol">
+<li>上传jar包到hadoop集群所在服务器，并提交mr作业</li>
+</ol>
+
+<pre class="example">
+yarn jar day02_demo5-1.0-SNAPSHOT.jar com.kkb.mr.demo5.GroupMain
+</pre>
+
+
+<div class="figure">
+<p><img src="./20201207_YARN资源调度框架&amp;Hadoop调优.assets/Snipaste_2020-12-08_23-47-35.png" alt="Snipaste_2020-12-08_23-47-35.png" />
+</p>
 </div>
-<p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
+
+<div class="figure">
+<p><img src="./20201207_YARN资源调度框架&amp;Hadoop调优.assets/Snipaste_2020-12-08_23-46-56.png" alt="Snipaste_2020-12-08_23-46-56.png" />
 </p>
-
-<p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
-</p>
-
-
-<hr />
+</div>
 </div>
 </body>
 </html>

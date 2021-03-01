@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -243,80 +242,85 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
+一、HBase表的数据模型有哪些？每个给出简要说明
 </p>
 
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
+<p>
+HBase数据存储结构中表的数据模型主要包括：
+</p>
 
 <p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
+行键（Row key）：table的主键，table中的记录按照rowkey
+的字典序进行排序，在HBase存储系统中行键总是被看作一个Byte数组。
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
-</pre>
-</div>
 
 <p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
+列族（Column
+Family）：HBase表中的每个列，都归属与某个列族。列族会在使用前定义（在定义表的时候就定义列族。
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
-</pre>
-</div>
-
 
 <p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
+列限定符（Column
+Qualifier）：列限定符不需要提前定义（不需要在定义表和列族的时候就定义列限定符），在HBase存储系统中列限定符总是被看作一个Byte数组。
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
 
 <p>
-发现有如下提示：
+列（Column）：HBase
+中的列由一个列族和一个列限定符组成，它们由=:=（冒号）字符分隔。
 </p>
+
+<p>
+单元格（Cell）：根据行键、列族和列可以映射到一个对应的单元格，单元格是HBase存储数据的具体地址，。在单元格中存储具体数据值，它是以Byte数组的形式存储的。
+</p>
+
+<p>
+时间戳：时间戳是给定"值"的一个版本号标识，每一个"值"都会对应一个时间戳。在默认情况下，时间戳表示数据服务在写入数据时的时间。
+</p>
+
+<p>
+二、使用hbase命令行客户端，进行表的操作
+</p>
+
+<p>
+（1）创建一个表，表名 "firsttable" ，包含两个列族，分别是col1
+col2，其中col1设置可保留版本数为3，col2为1个：
+</p>
+
 <pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
+create 'firsttable', {NAME =&gt; 'col1', VERSIONS =&gt; 3}, {NAME =&gt; 'col2', VERSIONS =&gt; 1}
 </pre>
-
 
 <p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
+<img src="./20201216_HBaseNoSQL数据库快速入门.assets/Snipaste_2020-12-17_23-33-25.png" alt="Snipaste_2020-12-17_23-33-25.png" />
+（2）向表中添加数据。要求：行键是rk001，向col1添加一列，列名为"oid",
+value是"order071701"
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
+
+<p>
+向col2添加一列，列名为"proid"，value是"pid00ab"，再向col1的列"oid"写入新的值，value是"order071702"
+</p>
+
+<pre class="example">
+put 'firsttable', 'rk001', 'col1:oid', 'order071701'
+put 'firsttable', 'rk001', 'col2:proid', 'pid00ab'
+put 'firsttable', 'rk001', 'col1:oid', 'order071702'
 </pre>
+
+<p>
+<img src="./20201216_HBaseNoSQL数据库快速入门.assets/Snipaste_2020-12-17_23-49-17.png" alt="Snipaste_2020-12-17_23-49-17.png" />
+（3）查询firsttable表中，行键为rk001的行中的，col1列族下oid列的最新的两个版本的值
+</p>
+
+<pre class="example">
+get 'firsttable', 'rk001', {COLUMNS =&gt; 'col1:oid', VERSIONS =&gt; 2}
+</pre>
+
+
+<div class="figure">
+<p><img src="./20201216_HBaseNoSQL数据库快速入门.assets/Snipaste_2020-12-18_00-04-43.png" alt="Snipaste_2020-12-18_00-04-43.png" />
+</p>
 </div>
-<p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
-</p>
-
-<p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
-</p>
-
-
-<hr />
 </div>
 </body>
 </html>

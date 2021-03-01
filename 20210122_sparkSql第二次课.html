@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -243,80 +242,194 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
+1、sparkSQL操作CSV文件并将结果写入mysql；
 </p>
 
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
+<p>
+（1）创建maven工程，引入相关jar包
+</p>
 
 <p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
+（2）开发SparkSQL程序，读取自定义CSV文件，结果数据写入到mysql表中
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
-</pre>
-</div>
 
 <p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
+资源文件:
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
-</pre>
-</div>
-
 
 <p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
+resources/test001.csv
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
 
 <p>
-发现有如下提示：
+pom.xml:
 </p>
+
 <pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.kkb&lt;/groupId&gt;
+    &lt;artifactId&gt;spark-sql-test001&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+            &lt;version&gt;5.1.38&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.commons&lt;/groupId&gt;
+            &lt;artifactId&gt;commons-lang3&lt;/artifactId&gt;
+            &lt;version&gt;3.7&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.hbase&lt;/groupId&gt;
+            &lt;artifactId&gt;hbase-server&lt;/artifactId&gt;
+            &lt;version&gt;2.2.2&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.hbase&lt;/groupId&gt;
+            &lt;artifactId&gt;hbase-common&lt;/artifactId&gt;
+            &lt;version&gt;2.2.2&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.hbase&lt;/groupId&gt;
+            &lt;artifactId&gt;hbase-client&lt;/artifactId&gt;
+            &lt;version&gt;2.2.2&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.spark&lt;/groupId&gt;
+            &lt;artifactId&gt;spark-streaming_2.11&lt;/artifactId&gt;
+            &lt;version&gt;2.3.3&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.spark&lt;/groupId&gt;
+            &lt;artifactId&gt;spark-sql_2.11&lt;/artifactId&gt;
+            &lt;version&gt;2.3.3&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.spark&lt;/groupId&gt;
+            &lt;artifactId&gt;spark-core_2.11&lt;/artifactId&gt;
+            &lt;version&gt;2.3.3&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.apache.spark&lt;/groupId&gt;
+            &lt;artifactId&gt;spark-hive_2.11&lt;/artifactId&gt;
+            &lt;version&gt;2.3.3&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;net.alchim31.maven&lt;/groupId&gt;
+                &lt;artifactId&gt;scala-maven-plugin&lt;/artifactId&gt;
+                &lt;version&gt;3.2.2&lt;/version&gt;
+                &lt;executions&gt;
+                    &lt;execution&gt;
+                        &lt;goals&gt;
+                            &lt;goal&gt;compile&lt;/goal&gt;
+                            &lt;goal&gt;testCompile&lt;/goal&gt;
+                        &lt;/goals&gt;
+                        &lt;configuration&gt;
+                            &lt;args&gt;
+                                &lt;arg&gt;-dependencyfile&lt;/arg&gt;
+                                &lt;arg&gt;${project.build.directory}/.scala_dependencies&lt;/arg&gt;
+                            &lt;/args&gt;
+                        &lt;/configuration&gt;
+                    &lt;/execution&gt;
+                &lt;/executions&gt;
+            &lt;/plugin&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+                &lt;artifactId&gt;maven-shade-plugin&lt;/artifactId&gt;
+                &lt;version&gt;2.4.3&lt;/version&gt;
+                &lt;executions&gt;
+                    &lt;execution&gt;
+                        &lt;phase&gt;package&lt;/phase&gt;
+                        &lt;goals&gt;
+                            &lt;goal&gt;shade&lt;/goal&gt;
+                        &lt;/goals&gt;
+                        &lt;configuration&gt;
+                            &lt;filters&gt;
+                                &lt;filter&gt;
+                                    &lt;artifact&gt;*:*&lt;/artifact&gt;
+                                    &lt;excludes&gt;
+                                        &lt;exclude&gt;META-INF/*.SF&lt;/exclude&gt;
+                                        &lt;exclude&gt;META-INF/*.DSA&lt;/exclude&gt;
+                                        &lt;exclude&gt;META-INF/*.RSA&lt;/exclude&gt;
+                                    &lt;/excludes&gt;
+                                &lt;/filter&gt;
+                            &lt;/filters&gt;
+                            &lt;transformers&gt;
+                                &lt;transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"&gt;
+                                &lt;/transformer&gt;
+                            &lt;/transformers&gt;
+                        &lt;/configuration&gt;
+                    &lt;/execution&gt;
+                &lt;/executions&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+
+&lt;/project&gt;
 </pre>
 
-
 <p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
+com.kkb.spark.sql.CSVOperate:
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
+
+<pre class="example">
+package com.kkb.spark.sql
+
+import java.util.Properties
+import org.apache.spark.SparkConf
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+
+object CSVOperate {
+
+  def main(args: Array[String]): Unit = {
+    val sparkConf: SparkConf = new SparkConf().setMaster("local[8]").setAppName("sparkCSV")
+    val session: SparkSession = SparkSession.builder().config(sparkConf).getOrCreate()
+    session.sparkContext.setLogLevel("WARN")
+    val frame: DataFrame = session
+      .read
+      .format("csv")
+      .option("timestampFormat", "yyyy/MM/dd HH:mm:ss ZZ")
+      .option("header", "true")
+      .option("multiLine", value = true)
+      .load(this.getClass.getClassLoader.getResource("test001.csv").getPath)
+
+    val prop = new Properties()
+    prop.put("user", "root")
+    prop.put("password", "123456")
+
+    frame.write.mode(SaveMode.Append).jdbc("jdbc:mysql://node03:3306/my_sparksql_testdb?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8", "my_sparksql_testdb.jobdetail_copy", prop)
+
+  }
+}
 </pre>
-</div>
+
 <p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
+<img src="./20210122_sparkSql第二次课.assets/屏幕截图%202021-01-24%20004259.png" alt="屏幕截图%202021-01-24%20004259.png" />
+2、判断题：
 </p>
 
 <p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
+如果executor因为超时被kill掉，那么executor中持久化的数据将无法挽救，无法访问，造成丢失
 </p>
 
-
-<hr />
+<p>
+错。如果Executor中缓存了数据，那么该Executor的Idle-timeout时间就不是由executorIdleTimeout决定，而是用spark.dynamicAllocation.cachedExecutorIdleTimeout控制，默认值：Integer.MAX\<sub>VALUE</sub>。如果手动设置了该值，当这些缓存数据的Executor被kill后，我们可以通过NodeManannger的External
+Shuffle
+Server来访问这些数据。这就要求NodeManager中spark.shuffle.service.enabled必须开启。
+</p>
 </div>
 </body>
 </html>

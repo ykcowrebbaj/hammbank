@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -243,80 +242,218 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
+1、使用kafka的命令行命令来创建一个topic，topic的名称为test\<sub>day02,设置3个分区</sub>，1个副本
 </p>
 
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
-
-<p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
-</pre>
-</div>
-
-<p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
-</pre>
-</div>
-
-
-<p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
-
-<p>
-发现有如下提示：
-</p>
 <pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
+bin/kafka-topics.sh --create --partitions 3 --replication-factor 1 --topic test_day02 --zookeeper node01:2181,node02:2181,node03:2181
 </pre>
-
 
 <p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
+2、创建maven工程，工程名称为kafka\<sub>operate2</sub>，导入kafka相关jar包，使用java代码开发kafka的生产者API，向kafka集群当中生产字符串格式的数据
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
+
+<p>
+pom.xml:
+</p>
+
+<pre class="example">
+&lt;dependencies&gt;
+       &lt;dependency&gt;
+           &lt;groupId&gt;org.apache.kafka&lt;/groupId&gt;
+           &lt;artifactId&gt;kafka-clients&lt;/artifactId&gt;
+           &lt;version&gt;2.4.1&lt;/version&gt;
+       &lt;/dependency&gt;
+       &lt;!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka --&gt;
+       &lt;!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka --&gt;
+       &lt;dependency&gt;
+           &lt;groupId&gt;org.apache.kafka&lt;/groupId&gt;
+           &lt;artifactId&gt;kafka_2.11&lt;/artifactId&gt;
+           &lt;version&gt;2.4.1&lt;/version&gt;
+       &lt;/dependency&gt;
+
+   &lt;/dependencies&gt;
+   &lt;build&gt;
+       &lt;plugins&gt;
+           &lt;plugin&gt;
+               &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+               &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+               &lt;version&gt;3.0&lt;/version&gt;
+               &lt;configuration&gt;
+                   &lt;source&gt;1.8&lt;/source&gt;
+                   &lt;target&gt;1.8&lt;/target&gt;
+                   &lt;encoding&gt;UTF-8&lt;/encoding&gt;
+                   &lt;!--    &lt;verbal&gt;true&lt;/verbal&gt;--&gt;
+               &lt;/configuration&gt;
+           &lt;/plugin&gt;
+           &lt;plugin&gt;
+               &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+               &lt;artifactId&gt;maven-shade-plugin&lt;/artifactId&gt;
+               &lt;version&gt;2.4.3&lt;/version&gt;
+               &lt;executions&gt;
+                   &lt;execution&gt;
+                       &lt;phase&gt;package&lt;/phase&gt;
+                       &lt;goals&gt;
+                           &lt;goal&gt;shade&lt;/goal&gt;
+                       &lt;/goals&gt;
+                       &lt;configuration&gt;
+                           &lt;filters&gt;
+                               &lt;filter&gt;
+                                   &lt;artifact&gt;*:*&lt;/artifact&gt;
+                                   &lt;excludes&gt;
+                                       &lt;exclude&gt;META-INF/*.SF&lt;/exclude&gt;
+                                       &lt;exclude&gt;META-INF/*.DSA&lt;/exclude&gt;
+                                       &lt;exclude&gt;META-INF/*.RSA&lt;/exclude&gt;
+                                   &lt;/excludes&gt;
+                               &lt;/filter&gt;
+                           &lt;/filters&gt;
+                           &lt;transformers&gt;
+                               &lt;transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"&gt;
+                                   &lt;mainClass&gt;&lt;/mainClass&gt;
+                               &lt;/transformer&gt;
+                           &lt;/transformers&gt;
+                       &lt;/configuration&gt;
+                   &lt;/execution&gt;
+               &lt;/executions&gt;
+           &lt;/plugin&gt;
+       &lt;/plugins&gt;
+   &lt;/build&gt;
 </pre>
+
+<p>
+3、在上述maven工程当中，继续使用java代码开发kafka的消费者API，从kafka集群当中消费数据并打印出来
+</p>
+
+<p>
+4、
+消费数据的时候，使用手动同步提交offset的方式来进行管理消费者的offset提交
+</p>
+
+<p>
+com.kkb.kafka\<sub>operate2.MyKafkaProducer</sub>:
+</p>
+
+<pre class="example">
+package com.kkb.kafka_operate2;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import java.util.Properties;
+
+public class MyKafkaProducer {
+    public static void main(String[] args) throws InterruptedException {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "node01:9092,node02:9092,node03:9092");
+        //消息的确认机制 0 1 -1或all
+        props.put("acks", "all");
+        props.put("retries", 0);
+        //缓冲区的大小  //默认32M
+        props.put("buffer.memory", 33554432);
+        //批处理数据的大小，每次写入多少数据到topic   //默认16KB
+        props.put("batch.size", 16384);
+        //可以延长多久发送数据   //默认为0 表示不等待 ，立即发送
+        props.put("linger.ms", 1);
+        //指定数据序列化和反序列化
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        KafkaProducer&lt;String, String&gt; producer = new KafkaProducer&lt;&gt;(props);
+        int messageNo = 1;
+        while (true) {
+            ProducerRecord&lt;String, String&gt; producerRecord = new ProducerRecord&lt;&gt;("test_day02", "hello world " + messageNo);
+            // 异步写入
+            producer.send(producerRecord, (metadata, exception) -&gt; {
+                if(exception != null){
+                    System.out.println("有异常，需要重新处理");
+                    producer.send(producerRecord);
+                }else{
+                    System.out.println("没有异常，正常发送数据");
+                }
+                if(metadata !=null ){
+                    System.out.println("topic:" +metadata.topic() +" | partition: "+metadata.partition() + " | offset:" + metadata.offset());
+                    System.out.println("key: " + producerRecord.key() + ", value: " + producerRecord.value());
+                }
+            });
+            messageNo++;
+            Thread.sleep(2000);
+        }
+    }
+}
+</pre>
+
+<p>
+com.kkb.kafka\<sub>operate2.MyKafkaConsumerManualCommitSync</sub>:
+</p>
+
+<pre class="example">
+package com.kkb.kafka_operate2;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
+public class MyKafkaConsumerManualCommitSync {
+    public static void main(String[] args) {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "node01:9092,node02:9092,node03:9092");
+        props.put("group.id", "controllerOffset");
+        //关闭自动提交，改为手动提交偏移量
+        props.put("enable.auto.commit", "false");
+        props.put("auto.offset.reset","earliest");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        KafkaConsumer&lt;String, String&gt; consumer = new KafkaConsumer&lt;String, String&gt;(props);
+        //指定消费者要消费的topic
+        consumer.subscribe(Collections.singletonList("test_day02"));
+
+        //定义一个数字，表示消息达到多少后手动提交偏移量
+        final int minBatchSize = 5;
+
+        //定义一个数组，缓冲一批数据
+        List&lt;ConsumerRecord&lt;String, String&gt;&gt; buffer = new ArrayList&lt;ConsumerRecord&lt;String, String&gt;&gt;();
+        while (true) {
+            ConsumerRecords&lt;String, String&gt; records =  consumer.poll(Duration.ofSeconds(3));
+            for (ConsumerRecord&lt;String, String&gt; record : records) {
+                buffer.add(record);
+            }
+            if (buffer.size() &gt;= minBatchSize) {
+                //insertIntoDb(buffer);  拿到数据之后，进行消费
+                System.out.println("缓冲区的数据条数："+buffer.size());
+
+                // 同步的方式手动提交
+                consumer.commitSync();
+                for (ConsumerRecord&lt;String, String&gt; record : buffer) {
+                    System.out.println("topic:" +record.topic() +" | partition: "+record.partition() + " | offset:" + record.offset());
+                    System.out.println("key: " + record.key() + ", message: " + record.value());
+                }
+                System.out.println("以上消费者数据手动同步提交完成...");
+                buffer.clear();
+            }
+        }
+    }
+}
+</pre>
+
+<p>
+MyKafkaProducer打印输出：
+</p>
+
+<p>
+<img src="./20210127_kafka第二次课.assets/QQ图片20210128194329.png" alt="QQ图片20210128194329.png" />
+MyKafkaConsumerManualCommitSync打印输出：
+</p>
+
+
+<div class="figure">
+<p><img src="./20210127_kafka第二次课.assets/QQ图片20210128194441.png" alt="QQ图片20210128194441.png" />
+</p>
 </div>
-<p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
-</p>
-
-<p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
-</p>
-
-
-<hr />
 </div>
 </body>
 </html>

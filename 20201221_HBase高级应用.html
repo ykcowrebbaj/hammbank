@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -243,80 +242,194 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
+hbase第一次课时，编程已经创建了表myuser；现在使用mr编程，将此表的数据读出来，写入一个HDFS文件/user/hadoop/myuser.txt
 </p>
 
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
-
 <p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
+pom.xml:
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
-</pre>
-</div>
 
-<p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
-</pre>
-</div>
-
-
-<p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
-
-<p>
-发现有如下提示：
-</p>
 <pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
+&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.hadoop&lt;/groupId&gt;
+        &lt;artifactId&gt;hadoop-client&lt;/artifactId&gt;
+        &lt;version&gt;3.1.4&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.hadoop&lt;/groupId&gt;
+        &lt;artifactId&gt;hadoop-auth&lt;/artifactId&gt;
+        &lt;version&gt;3.1.4&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;!-- https://mvnrepository.com/artifact/org.apache.hbase/hbase-client --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.hbase&lt;/groupId&gt;
+        &lt;artifactId&gt;hbase-client&lt;/artifactId&gt;
+        &lt;version&gt;2.2.2&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.hbase&lt;/groupId&gt;
+        &lt;artifactId&gt;hbase-mapreduce&lt;/artifactId&gt;
+        &lt;version&gt;2.2.2&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.hbase&lt;/groupId&gt;
+        &lt;artifactId&gt;hbase-server&lt;/artifactId&gt;
+        &lt;version&gt;2.2.2&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;junit&lt;/groupId&gt;
+        &lt;artifactId&gt;junit&lt;/artifactId&gt;
+        &lt;version&gt;4.12&lt;/version&gt;
+        &lt;scope&gt;test&lt;/scope&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.testng&lt;/groupId&gt;
+        &lt;artifactId&gt;testng&lt;/artifactId&gt;
+        &lt;version&gt;6.14.3&lt;/version&gt;
+        &lt;scope&gt;test&lt;/scope&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
+&lt;build&gt;
+    &lt;plugins&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+            &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+            &lt;version&gt;3.0&lt;/version&gt;
+            &lt;configuration&gt;
+                &lt;source&gt;1.8&lt;/source&gt;
+                &lt;target&gt;1.8&lt;/target&gt;
+                &lt;encoding&gt;UTF-8&lt;/encoding&gt;
+                &lt;!--    &lt;verbal&gt;true&lt;/verbal&gt;--&gt;
+            &lt;/configuration&gt;
+        &lt;/plugin&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+            &lt;artifactId&gt;maven-shade-plugin&lt;/artifactId&gt;
+            &lt;version&gt;2.2&lt;/version&gt;
+            &lt;executions&gt;
+                &lt;execution&gt;
+                    &lt;phase&gt;package&lt;/phase&gt;
+                    &lt;goals&gt;
+                        &lt;goal&gt;shade&lt;/goal&gt;
+                    &lt;/goals&gt;
+                    &lt;configuration&gt;
+                        &lt;filters&gt;
+                            &lt;filter&gt;
+                                &lt;artifact&gt;*:*&lt;/artifact&gt;
+                                &lt;excludes&gt;
+                                    &lt;exclude&gt;META-INF/*.SF&lt;/exclude&gt;
+                                    &lt;exclude&gt;META-INF/*.DSA&lt;/exclude&gt;
+                                    &lt;exclude&gt;META-INF/*/RSA&lt;/exclude&gt;
+                                &lt;/excludes&gt;
+                            &lt;/filter&gt;
+                        &lt;/filters&gt;
+                    &lt;/configuration&gt;
+                &lt;/execution&gt;
+            &lt;/executions&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/build&gt;
 </pre>
-
 
 <p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
+java代码:
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
+
+<pre class="example">
+package com.kkb.demo04;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
+import org.apache.hadoop.hbase.mapreduce.TableMapper;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import java.io.IOException;
+
+
+public class HBase2HDFS {
+
+    public static class MyMapper extends TableMapper&lt;Text, Text&gt; {
+        Text textRow = new Text();
+        Text textValue = new Text();
+        @Override
+        public void map(ImmutableBytesWritable row, Result value, Context context) throws IOException, InterruptedException {
+            textRow.set(row.toString());
+            textValue.set(value.toString());
+            context.write(textRow, textValue);
+        }
+    }
+
+    public static class MyReducer extends Reducer&lt;Text, Text, Text, Text&gt; {
+        @Override
+        public void reduce(Text key, Iterable&lt;Text&gt; values, Context context) throws IOException, InterruptedException {
+            for (Text value : values) {
+                context.write(key, value);
+            }
+        }
+    }
+
+    public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+        Configuration conf = HBaseConfiguration.create();
+        conf.set("hbase.zookeeper.quorum", "node01:2181,node02:2181,node03:2181");
+        Job job = Job.getInstance(conf);
+
+        job.setJarByClass(HBase2HDFS.class);
+
+        TableMapReduceUtil.initTableMapperJob(TableName.valueOf("myuser"),
+                new Scan(),
+                MyMapper.class,
+                Text.class,
+                Text.class,
+                job);
+
+        job.setReducerClass(MyReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+        TextOutputFormat.setOutputPath(job, new Path("hdfs://node01:8020/user/hadoop/myuser.txt"));
+
+        job.setNumReduceTasks(1);
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
 </pre>
+
+<p>
+编译打包:
+</p>
+
+<pre class="example">
+mvn clean package -Dmaven.test.skip=true
+</pre>
+
+<p>
+linux环境下运行程序并查看hdfs上的输出文件：
+</p>
+
+<pre class="example">
+yarn jar hbase_day03-1.0-SNAPSHOT.jar com.kkb.demo04.HBase2HDFS
+hdfs dfs -cat /user/hadoop/myuser.txt/part-r-00000
+</pre>
+
+<p>
+输出到/user/hadoop/myuser.txt中的内容：
+</p>
+
+
+<div class="figure">
+<p><img src="./20201221_HBase高级应用.assets/Snipaste_2020-12-23_10-02-45.png" alt="Snipaste_2020-12-23_10-02-45.png" />
+</p>
 </div>
-<p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
-</p>
-
-<p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
-</p>
-
-
-<hr />
 </div>
 </body>
 </html>

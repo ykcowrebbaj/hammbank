@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -243,80 +242,147 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
+1、实操：flume监控本地目录，有新文件产生，就将其数据采集到hdfs。要求：
 </p>
 
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
+<p>
+（1）、选择正确的source类型，监控的路径名称/home/hadoop/flume/spoolsource
+</p>
 
 <p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
+（2）、channel要求使用file
+channel（若不知道如何用，按照上课讲的方式，查官方文档）
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
-</pre>
-</div>
 
 <p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
+（3）、sink组件要求
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
-</pre>
-</div>
-
 
 <p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
+数据写入hdfs的路径格式为hdfs://node01:8020/spooldir/07-20-2020/1410/
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
 
 <p>
-发现有如下提示：
+数据自动根据年月日时分实际情况，写入相应的目录中
 </p>
+
+<p>
+如2020-07-20号14点10分到19分的数据的数据写入目录/spooldir/07-20-2020/1410/；
+</p>
+
+<p>
+2020-07-21号16点20分到29分的数据的数据写入目录/spooldir/07-21-2020/1620/；
+</p>
+
+<p>
+其他时间的数据，写入对应目录
+</p>
+
+<p>
+（4）、hdfs上生成的文件名前缀是“spooldir-”
+</p>
+
+<p>
+（5）、hdfs的文件，每写入1M的数据，就滚动生成一个新的文件
+</p>
+
+<p>
+（6）对hdfs生成的目录及文件列表进行截图，能说明运行成功即可；粘贴到PDF
+</p>
+
+<p>
+创建/kkb/install/apache-flume-1.9.0-bin/conf/spooldir.conf：
+</p>
+
 <pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
-</pre>
+# Name the components on this agent
+a1.sources = r1
+a1.sinks = k1
+a1.channels = c1
 
+# Describe the source
+a1.sources.r1.type = spooldir
+a1.sources.r1.spoolDir = /home/hadoop/flume/spoolsource
+# Whether to add a header storing the absolute path filename
+a1.sources.r1.fileHeader = true
+
+# Describe the sink
+a1.sinks.k1.type = hdfs
+a1.sinks.k1.hdfs.path = hdfs://node01:8020/spooldir/%m-%d-%Y/%H%M/
+a1.sinks.k1.hdfs.filePrefix = spooldir-
+a1.sinks.k1.hdfs.round = true
+a1.sinks.k1.hdfs.roundValue = 10
+a1.sinks.k1.hdfs.roundUnit = minute
+a1.sinks.k1.hdfs.rollInterval = 0
+a1.sinks.k1.hdfs.rollSize = 1048576
+a1.sinks.k1.hdfs.rollCount = 0
+a1.sinks.k1.hdfs.batchSize = 1
+a1.sinks.k1.hdfs.useLocalTimeStamp = true
+a1.sinks.k1.hdfs.fileType = DataStream
+
+# Use a channel which buffers events in file
+a1.channels.c1.type = file
+a1.channels.c1.capacity = 1000
+a1.channels.c1.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.r1.channels = c1
+a1.sinks.k1.channel = c1
+</pre>
 
 <p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
+启动flume：
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
+
+<pre class="example">
+cd /kkb/install/apache-flume-1.9.0-bin
+bin/flume-ng agent -c ./conf -f ./conf/spooldir.conf -n a1 -Dflume.root.logger=INFO,console
 </pre>
+
+<p>
+最后，将不同的文件上传到/home/hadoop/flume/spoolsource/目录下。
+</p>
+
+<p>
+运行结果：
+</p>
+
+
+<div class="figure">
+<p><img src="./20201223_Flume数据采集框架.assets/Snipaste_2020-12-24_19-40-52.png" alt="Snipaste_2020-12-24_19-40-52.png" />
+</p>
+</div>
+
+<div class="figure">
+<p><img src="./20201223_Flume数据采集框架.assets/Snipaste_2020-12-24_19-41-43.png" alt="Snipaste_2020-12-24_19-41-43.png" />
+</p>
 </div>
 <p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
+<img src="./20201223_Flume数据采集框架.assets/Snipaste_2020-12-24_19-42-20.png" alt="Snipaste_2020-12-24_19-42-20.png" />
+2、判断题：
 </p>
 
 <p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
+增加agent的source 个数，进而提高source读取数据吞吐量
 </p>
 
+<p>
+对。当输入单个source的数据传输存在瓶颈时，增加source并同时增加输入数据源数量可以提高source读取数据吞吐量。
+</p>
 
-<hr />
+<p>
+3、判断题：
+</p>
+
+<p>
+减小batchSize，适当提高采集频率，可以调高 source 搬运数据到 channel
+的性能
+</p>
+
+<p>
+错。当一段时间内产生的events较少时，减小batchSize适当提高采集频率，可增加source搬运数据到channel的实时性，这种情况下确实可以提高性能；但当极短的时间内产生大量的events时，减小batchSize提高采集频率，会使source搬运数据到channel的次数变得非常频繁，反而降低了性能。
+</p>
 </div>
 </body>
 </html>

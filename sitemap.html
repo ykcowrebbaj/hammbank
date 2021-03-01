@@ -1,71 +1,204 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-               "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
+<!-- 2021-03-01 周一 23:37 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>hammbank's blog</title>
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<meta name="title" content="hammbank's blog"/>
-<meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2017-08-27T02:08+0800"/>
-<meta name="author" content=""/>
-<meta name="description" content=""/>
-<meta name="keywords" content=""/>
+<meta name="generator" content="Org mode" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
-  html { font-family: Times, serif; font-size: 12pt; }
-  .title  { text-align: center; }
-  .todo   { color: red; }
-  .done   { color: green; }
-  .tag    { background-color: #add8e6; font-weight:normal }
-  .target { }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
   .timestamp { color: #bebebe; }
   .timestamp-kwd { color: #5f9ea0; }
-  .right  {margin-left:auto; margin-right:0px;  text-align:right;}
-  .left   {margin-left:0px;  margin-right:auto; text-align:left;}
-  .center {margin-left:auto; margin-right:auto; text-align:center;}
-  p.verse { margin-left: 3% }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
   pre {
-	border: 1pt solid #AEBDCC;
-	background-color: #F3F5F7;
-	padding: 5pt;
-	font-family: courier, monospace;
-        font-size: 90%;
-        overflow:auto;
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
   }
-  table { border-collapse: collapse; }
-  td, th { vertical-align: top;  }
-  th.right  { text-align:center;  }
-  th.left   { text-align:center;   }
-  th.center { text-align:center; }
-  td.right  { text-align:right;  }
-  td.left   { text-align:left;   }
-  td.center { text-align:center; }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
   dt { font-weight: bold; }
-  div.figure { padding: 0.5em; }
-  div.figure p { text-align: center; }
-  div.inlinetask {
-    padding:10px;
-    border:2px solid gray;
-    margin:10px;
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
     background: #ffffcc;
   }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
   textarea { overflow-x: auto; }
-  .linenr { font-size:smaller }
-  .code-highlighted {background-color:#ffff00;}
-  .org-info-js_info-navigation { border-style:none; }
-  #org-info-js_console-label { font-size:10px; font-weight:bold;
-                               white-space:nowrap; }
-  .org-info-js_search-highlight {background-color:#ffff00; color:#000000;
-                                 font-weight:bold; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
   /*]]>*/-->
-</style><link rel="stylesheet" type="text/css" href="css/worg.css"/>
+</style>
+<link rel="stylesheet" type="text/css" href="css/worg.css"/>
 <script type="text/javascript">
 /*
 @licstart  The following is the entire license notice for the
 JavaScript code in this tag.
 
-Copyright (C) 2012-2013 Free Software Foundation, Inc.
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
 
 The JavaScript code in this tag is free software: you can
 redistribute it and/or modify it under the terms of the GNU
@@ -106,31 +239,44 @@ for the JavaScript code in this tag.
  }
 /*]]>*///-->
 </script>
-
 </head>
 <body>
-
-<div id="preamble">
-
-</div>
-
 <div id="content">
 <h1 class="title">hammbank's blog</h1>
-
-<ul>
-<li><a href="ELK部署手册.html">ELK部署手册</a>
-</li>
-<li><a href="ansible学习笔记.html">ansible学习笔记</a>
-</li>
-<li><a href="centos中的umask.html">centos中的umask</a>
-</li>
-<li><a href="lvs+keepalive.html">lvs+keepalive</a>
-</li>
-<li><a href="远程桌面--ssh的x-forwording.html">远程桌面——ssh的X转发</a>
-</li>
+<ul class="org-ul">
+<li><a href="20201130_HDFS分布式文件系统.html">20201130<sub>HDFS分布式文件系统</sub></a></li>
+<li><a href="20201202_MapReduce计算框架初探.html">20201202<sub>MapReduce计算框架初探</sub></a></li>
+<li><a href="20201204_MapReduce计算框架高级编程及核心原理.html">20201204<sub>MapReduce计算框架高级编程及核心原理</sub></a></li>
+<li><a href="20201207_YARN资源调度框架&amp;Hadoop调优.html">20201207<sub>YARN资源调度框架</sub>&amp;Hadoop调优</a></li>
+<li><a href="20201209_hive数仓工具入门.html">20201209<sub>hive数仓工具入门</sub></a></li>
+<li><a href="20201211_hive数仓工具应用.html">20201211<sub>hive数仓工具应用</sub></a></li>
+<li><a href="20201214_hive企业级调优.html">20201214<sub>hive企业级调优</sub></a></li>
+<li><a href="20201216_HBaseNoSQL数据库快速入门.html">20201216<sub>HBaseNoSQL数据库快速入门</sub></a></li>
+<li><a href="20201218_HBase核心原理.html">20201218<sub>HBase核心原理</sub></a></li>
+<li><a href="20201221_HBase高级应用.html">20201221<sub>HBase高级应用</sub></a></li>
+<li><a href="20201223_Flume数据采集框架.html">20201223<sub>Flume数据采集框架</sub></a></li>
+<li><a href="20201225_数据仓库第一次课.html">20201225<sub>数据仓库第一次课</sub></a></li>
+<li><a href="20201228_数据仓库第二次课.html">20201228<sub>数据仓库第二次课</sub></a></li>
+<li><a href="20201230_数据仓库第三次课.html">20201230<sub>数据仓库第三次课</sub></a></li>
+<li><a href="20210104_数据仓库第四次课.html">20210104<sub>数据仓库第四次课</sub></a></li>
+<li><a href="20210106_数据仓库第五次课.html">20210106<sub>数据仓库第五次课</sub></a></li>
+<li><a href="20210108_scala第一次课.html">20210108<sub>scala第一次课</sub></a></li>
+<li><a href="20210111_scala第二次课.html">20210111<sub>scala第二次课</sub></a></li>
+<li><a href="20210113_sparkCore第一次课.html">20210113<sub>sparkCore第一次课</sub></a></li>
+<li><a href="20210115_sparkCore第二次课.html">20210115<sub>sparkCore第二次课</sub></a></li>
+<li><a href="20210118_sparkCore第三次课.html">20210118<sub>sparkCore第三次课</sub></a></li>
+<li><a href="20210120_sparkSql第一次课.html">20210120<sub>sparkSql第一次课</sub></a></li>
+<li><a href="20210122_sparkSql第二次课.html">20210122<sub>sparkSql第二次课</sub></a></li>
+<li><a href="20210125_kafka第一次课.html">20210125<sub>kafka第一次课</sub></a></li>
+<li><a href="20210127_kafka第二次课.html">20210127<sub>kafka第二次课</sub></a></li>
+<li><a href="20210129_sparkStreaming第一次课.html">20210129<sub>sparkStreaming第一次课</sub></a></li>
+<li><a href="ELK部署手册.html">ELK部署手册</a></li>
+<li><a href="ansible学习笔记.html">ansible学习笔记</a></li>
+<li><a href="centos中的umask.html">centos中的umask</a></li>
+<li><a href="lvs+keepalive.html">lvs+keepalive</a></li>
+<li><a href="使用mailx和openssl发送邮件.html">使用mailx和openssl发送邮件</a></li>
+<li><a href="远程桌面--ssh的x-forwording.html">远程桌面——ssh的X转发</a></li>
 </ul>
-
 </div>
-
 </body>
 </html>

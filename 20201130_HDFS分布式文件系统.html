@@ -6,9 +6,8 @@
 <!-- 2021-03-01 周一 23:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>远程桌面——ssh的X转发</title>
+<title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="朱捷文" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -240,83 +239,231 @@ for the JavaScript code in this tag.
  }
 /*]]>*///-->
 </script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        displayAlign: "center",
+        displayIndent: "0em",
+
+        "HTML-CSS": { scale: 100,
+                        linebreaks: { automatic: "false" },
+                        webFont: "TeX"
+                       },
+        SVG: {scale: 100,
+              linebreaks: { automatic: "false" },
+              font: "TeX"},
+        NativeMML: {scale: 100},
+        TeX: { equationNumbers: {autoNumber: "AMS"},
+               MultLineWidth: "85%",
+               TagSide: "right",
+               TagIndent: ".8em"
+             }
+});
+</script>
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
 </head>
 <body>
 <div id="content">
-<h1 class="title">远程桌面——ssh的X转发</h1>
 <p>
-在开始之前，为了避免混乱，我们先统一一下名称：
-</p>
-<ul class="org-ul">
-<li>本地主机：ssh客户端，亦是X服务端xorg-server，运行在windows操作系统上</li>
-<li>远程主机：ssh服务端，亦是X客户端firefox，运行于linux操作系统上</li>
-</ul>
-
-<p>
-首先，下载cygwin的setup安装程序，<a href="http://www.cygwin.com/">http://www.cygwin.com/</a> （这里我使用的是32位的cygwin安装程序），然后安装会提示我们选择哪些程序，为了开启图形界面，必须安装以下这些包：
+一、描述windows本地开发环境如何配置？并完成配置
 </p>
 
-<ul class="org-ul">
-<li>X11目录下的xorg-server（此项必须）</li>
-<li>X11目录下的xinit （此项必须）</li>
-<li>Net目录下的openssh （要支持ssh的X转发，也必须安装）</li>
-</ul>
-
 <p>
-安装完之后，打开cygwin的shell，输入startxwin后，右下角会出现X托盘图标，这样，应该就算开启X11的服务了。然后打开本地主机上的xterm窗口（右键右下角X托盘图标，点击application &#x2013;&gt; xterm），在打开的xterm窗口中输入：
+修改C:\Windows\System32\drivers\etc\hosts文件，增加：
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -Y root@remoteip
-</pre>
-</div>
 
-<p>
-根据提示输入远程主机的登陆密码，最后启动firefox就应该ok了
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">firefox &amp;
-</pre>
-</div>
-
-
-<p>
-但是，我在首次使用ssh的X转发时并不成功，便试着去掉&amp;直接运行firefox，提示Error: no display specified。于是退出当前已登录的ssh，重新登陆并加上-v选项：
-</p>
-<div class="org-src-container">
-<pre class="src src-sh">ssh -v -Y root@remoteip
-</pre>
-</div>
-
-<p>
-发现有如下提示：
-</p>
 <pre class="example">
-Warning: No xauth data; using fake authentication data for X11 forwarding.
-debug1: Requesting X11 forwarding with authentication spoofing.
-debug1: Remote: No xauth program; cannot forward with spoofing.
-X11 forwarding request failed on channel 0
+192.168.111.131 node01.kaikeba.com node01
+192.168.111.132 node02.kaikeba.com node02
+192.168.111.133 node03.kaikeba.com node03
 </pre>
-
 
 <p>
-说明远程主机上还未安装xorg-x11-xauth包，于是：
+安装jdk8：
 </p>
-<div class="org-src-container">
-<pre class="src src-sh">yum install xorg-x11-xauth
+
+<p>
+安装时需要注意安装路径不要带空格。安装完成后添加JAVA\<sub>HOME环境变量</sub>，然后PATH增加$JAVA<sub>HOME</sub>$/bin
+</p>
+
+<p>
+windows下hadoop环境配置：
+</p>
+
+<p>
+安装时需要注意安装路径不要带空格。安装完成后用课件中的bin覆盖，主要增加了winutils.exe和hadoop.dll，并把hadoop.dll复制到C:\Windows\System32下。然后添加HADOOP\<sub>HOME环境变量</sub>，增加$HADOOP<sub>HOME</sub>$/bin和$HADOOP<sub>HOME</sub>$/sbin。最后替换$HADOOP<sub>HOME</sub>$/bin和$HADOOP<sub>HOME</sub>$/sbin中的*.cmd文件的unix换行符，使之变为windows换行符。
+</p>
+
+<p>
+关于安装maven：
+</p>
+
+<p>
+由于当前最新版的idea集成maven3.6.3和maven插件，该步骤可以省略。
+</p>
+
+<p>
+安装idea（使用免费社区版）：
+</p>
+
+<p>
+一路下一步完成安装
+</p>
+
+<p>
+idea配置maven：
+</p>
+
+<p>
+由于上一步使用idea自带的maven，一般不需要额外配置。但为提升下载速度，可以添加maven的阿里云镜像，C:\Program Files\JetBrains\IntelliJ IDEA
+Community Edition 2020.2.4\plugins\maven\lib\maven3\conf\settings.xml：
+</p>
+
+<pre class="example">
+&lt;settings&gt;
+  &lt;mirrors&gt;
+    &lt;mirror&gt;
+      &lt;id&gt;aliyunmaven&lt;/id&gt;
+      &lt;mirrorOf&gt;*&lt;/mirrorOf&gt;
+      &lt;name&gt;阿里云公共仓库&lt;/name&gt;
+      &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
+    &lt;/mirror&gt;
+  &lt;/mirrors&gt;
+&lt;/settings&gt;
 </pre>
+
+<p>
+二、在idea中，新建maven工程，编程实现创建hdfs的/kkb/目录；并上传文件a.txt到此目录：
+</p>
+
+<p>
+pom.xml中增加:
+</p>
+
+<pre class="example">
+&lt;properties&gt;
+    &lt;hadoop.version&gt;3.1.4&lt;/hadoop.version&gt;
+&lt;/properties&gt;
+
+&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.hadoop&lt;/groupId&gt;
+        &lt;artifactId&gt;hadoop-client&lt;/artifactId&gt;
+        &lt;version&gt;${hadoop.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.hadoop&lt;/groupId&gt;
+        &lt;artifactId&gt;hadoop-common&lt;/artifactId&gt;
+        &lt;version&gt;${hadoop.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.hadoop&lt;/groupId&gt;
+        &lt;artifactId&gt;hadoop-hdfs&lt;/artifactId&gt;
+        &lt;version&gt;${hadoop.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.apache.hadoop&lt;/groupId&gt;
+        &lt;artifactId&gt;hadoop-mapreduce-client-core&lt;/artifactId&gt;
+        &lt;version&gt;${hadoop.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;!-- https://mvnrepository.com/artifact/junit/junit --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;junit&lt;/groupId&gt;
+        &lt;artifactId&gt;junit&lt;/artifactId&gt;
+        &lt;version&gt;4.11&lt;/version&gt;
+        &lt;scope&gt;test&lt;/scope&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.testng&lt;/groupId&gt;
+        &lt;artifactId&gt;testng&lt;/artifactId&gt;
+        &lt;version&gt;RELEASE&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;log4j&lt;/groupId&gt;
+        &lt;artifactId&gt;log4j&lt;/artifactId&gt;
+        &lt;version&gt;1.2.17&lt;/version&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
+&lt;build&gt;
+    &lt;plugins&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+            &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+            &lt;version&gt;3.0&lt;/version&gt;
+            &lt;configuration&gt;
+                &lt;source&gt;1.8&lt;/source&gt;
+                &lt;target&gt;1.8&lt;/target&gt;
+                &lt;encoding&gt;UTF-8&lt;/encoding&gt;
+                &lt;!--   &lt;verbal&gt;true&lt;/verbal&gt;--&gt;
+            &lt;/configuration&gt;
+        &lt;/plugin&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+            &lt;artifactId&gt;maven-shade-plugin&lt;/artifactId&gt;
+            &lt;version&gt;2.4.3&lt;/version&gt;
+            &lt;executions&gt;
+                &lt;execution&gt;
+                    &lt;phase&gt;package&lt;/phase&gt;
+                    &lt;goals&gt;
+                        &lt;goal&gt;shade&lt;/goal&gt;
+                    &lt;/goals&gt;
+                    &lt;configuration&gt;
+                        &lt;minimizeJar&gt;true&lt;/minimizeJar&gt;
+                    &lt;/configuration&gt;
+                &lt;/execution&gt;
+            &lt;/executions&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/build&gt;
+</pre>
+
+<p>
+java代码：
+</p>
+
+<pre class="example">
+package com.kkb;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+
+public class HDFSDemo {
+    @Test
+    public void mkDirOnHDFS() throws IOException {
+        Configuration configuration = new Configuration();
+        configuration.set("fs.defaultFS", "hdfs://node01:8020");
+        FileSystem fileSystem = FileSystem.get(configuration);
+        boolean mkdirs = fileSystem.mkdirs(new Path("/kkb"));
+        fileSystem.close();
+    }
+
+    @Test
+    public void uploadFile() throws URISyntaxException, IOException, InterruptedException {
+        Configuration configuration = new Configuration();
+        FileSystem fileSystem = FileSystem.get(new URI("hdfs://node01:8020"),configuration,"hadoop");
+        fileSystem.copyFromLocalFile(new Path("file:///C:\\my_stuff\\kkb\\作业\\20201130\\3、数据\\smallfile\\a.txt"), new Path("/kkb"));
+        fileSystem.close();
+    }
+}
+</pre>
+
+<p>
+查看确认hdfs中的/kkb目录是否已创建和a.txt文件是否上传成功：
+</p>
+
+
+<div class="figure">
+<p><img src="./20201130_HDFS分布式文件系统.assets/20201202101644.png" alt="20201202101644.png" />
+</p>
 </div>
-<p>
-再重新ssh登陆运行firefox，稍等片刻windos桌面便弹出熟悉的firefox窗口，It works！:-)
-</p>
-
-<p>
-cygwin官方关于xorg安装和使用的详细说明：<br />
-<a href="http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing">http://x.cygwin.com/docs/ug/setup.html#setup-cygwin-x-installing</a><br />
-<a href="http://x.cygwin.com/docs/ug/using.html">http://x.cygwin.com/docs/ug/using.html</a>
-</p>
-
-
-<hr />
 </div>
 </body>
 </html>
